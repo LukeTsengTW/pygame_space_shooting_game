@@ -2,20 +2,18 @@ import pygame
 import sys
 import random
 
-# 遊戲設定
 SCREEN_WIDTH, SCREEN_HEIGHT = 600, 900
 PLAYER_SPEED = 4
 BULLET_SPEED = 5
-ENEMY_GENERATION_THRESHOLD = 0.02  # 敵人生成閾值，越大，每次生成的敵人越多
+ENEMY_GENERATION_THRESHOLD = 0.02
 ENEMY_2_GENERATION_THRESHOLD = 0.007
 ENEMY_3_GENERATION_THRESHOLD = 0.0085
 ENEMY_4_GENERATION_THRESHOLD = 0.003
 BOSS_GENERATION_ONCE = False
 
-# 初始化pygame
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-font = pygame.font.Font('font.ttf', 36)  # 字體和大小
+font = pygame.font.Font('font.ttf', 36)
 clock = pygame.time.Clock()
 
 max_lives = 5
@@ -48,12 +46,12 @@ class Player(pygame.sprite.Sprite):
             self.images_invincible[key].blit(self.images[key], (0, 0))
             self.images_invincible[key].fill((255, 255, 255, 128), special_flags=pygame.BLEND_RGBA_MULT)
         self.rect = self.images['full_health'].get_rect(center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-30))
-        self.lives = max_lives  # 玩家的生命值
-        self.invincible = False  # 玩家是否處於無敵狀態
-        self.last_hit_time = None  # 玩家最後一次被擊中的時間
+        self.lives = max_lives 
+        self.invincible = False 
+        self.last_hit_time = None 
         self.image_key = 'full_health'
-        self.index = 0  # 初始化索引
-        self.last_shot_time = pygame.time.get_ticks()  # 初始化最後一次發射子彈的時間
+        self.index = 0 
+        self.last_shot_time = pygame.time.get_ticks()
 
     def update(self, pressed_keys, mouse_pos):
         if control == 0:
@@ -68,7 +66,6 @@ class Player(pygame.sprite.Sprite):
         else:
             self.rect.center = mouse_pos
 
-        # 保持玩家在屏幕內
         if self.rect.left < 0:
             self.rect.left = 0
         elif self.rect.right > SCREEN_WIDTH:
@@ -78,13 +75,13 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.bottom >= SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
         
-        if pygame.time.get_ticks() - self.last_shot_time > 15: #每50毫秒射一發
+        if pygame.time.get_ticks() - self.last_shot_time > 15: 
             for angle in [5, 0, -5]:
                 bullet = Bullet(self)
-                bullet.velocity = pygame.math.Vector2(0, -BULLET_SPEED).rotate(angle)  # 設定子彈的速度和方向
+                bullet.velocity = pygame.math.Vector2(0, -BULLET_SPEED).rotate(angle) 
                 bullets.add(bullet)
                 all_sprites.add(bullet)
-                self.last_shot_time = pygame.time.get_ticks()  # 更新最後一次發射子彈的時間
+                self.last_shot_time = pygame.time.get_ticks()
     
     def draw(self, screen):
         if self.lives == 5:
@@ -107,9 +104,9 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, player):
         super().__init__()
         self.images = [pygame.transform.scale(pygame.image.load(f'img/player/bullets/zapper_assets/zapper_frame_{i}.png'), (6, 32)).convert_alpha() for i in range(1, 9)]
-        self.velocity = pygame.math.Vector2(0, BULLET_SPEED)  # 初始化速度向量
-        self.index = 0  # 初始化索引
-        self.surf = self.images[self.index]  # 當前的圖像
+        self.velocity = pygame.math.Vector2(0, BULLET_SPEED) 
+        self.index = 0 
+        self.surf = self.images[self.index] 
         self.rect = self.surf.get_rect(center = (player.rect.centerx, player.rect.top))
         self.pos_x = float(self.rect.x)
         self.pos_y = float(self.rect.y)
@@ -118,13 +115,13 @@ class Bullet(pygame.sprite.Sprite):
         
         if self.rect.bottom < 0:
             self.kill()
-        self.index = (self.index + 1) % len(self.images)  # 更新索引
-        self.surf = self.images[self.index]  # 更新當前的圖像
+        self.index = (self.index + 1) % len(self.images) 
+        self.surf = self.images[self.index] 
 
         self.pos_y += self.velocity.y
-        self.pos_x += self.velocity.x  # 新增這行
+        self.pos_x += self.velocity.x 
         self.rect.y = int(self.pos_y)
-        self.rect.x = int(self.pos_x)  # 新增這行
+        self.rect.x = int(self.pos_x) 
 
 class EnemyBullet(pygame.sprite.Sprite):
     def __init__(self, enemy, image_path, image_scale, image_range):
@@ -141,7 +138,7 @@ class EnemyBullet(pygame.sprite.Sprite):
         self.last_update = pygame.time.get_ticks()
 
     def update(self, pressed_keys=None, mouse_pos=None):
-        if pygame.time.get_ticks() - self.last_update > 100:  # 每50毫秒更新一次圖像
+        if pygame.time.get_ticks() - self.last_update > 100:
             self.index = (self.index + 1) % len(self.images)
             self.surf = self.images[self.index]
             self.last_update = pygame.time.get_ticks()
@@ -161,18 +158,18 @@ class EnemyBullet_2(EnemyBullet):
 class EnemyBullet_3(EnemyBullet):
     def __init__(self, enemy):
         super().__init__(enemy, 'img/enemy/lv1_to_5/Projectiles/Big_Bullet_assets/Big_Bullet_frame_', (13.5, 20.25), 4)
-        self.velocity = pygame.math.Vector2(0, 1)  # 初始化速度向量
+        self.velocity = pygame.math.Vector2(0, 1) 
         self.last_update = pygame.time.get_ticks()
 
     def update(self, pressed_keys=None, mouse_pos=None):
-        if pygame.time.get_ticks() - self.last_update > 100:  # 每50毫秒更新一次圖像
+        if pygame.time.get_ticks() - self.last_update > 100:  
             self.index = (self.index + 1) % len(self.images)
             self.surf = self.images[self.index]
             self.last_update = pygame.time.get_ticks()
         self.pos_y += self.velocity.y
-        self.pos_x += self.velocity.x  # 新增這行
+        self.pos_x += self.velocity.x 
         self.rect.y = int(self.pos_y)
-        self.rect.x = int(self.pos_x)  # 新增這行
+        self.rect.x = int(self.pos_x) 
         if self.rect.top > SCREEN_HEIGHT:
             self.kill()
 
@@ -187,13 +184,13 @@ class Enemy(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(original_image)
         self.surf = pygame.transform.scale(original_image, scale) if scale else original_image
         self.rect = self.surf.get_rect(center = (random.randint(15, SCREEN_WIDTH-15), 0))
-        self.shield_index = 0  # 初始化護盾圖像的索引
+        self.shield_index = 0 
         if shield_image_path:
             original_image = pygame.image.load(f'{shield_image_path}1.png').convert_alpha()
             original_size = original_image.get_size()
             self.shield_images = [pygame.transform.scale(pygame.image.load(f'{shield_image_path}{i}.png').convert_alpha(), shield_scale if shield_scale else original_size) for i in range(1, shield_frames)]
-            self.shield_surf = self.shield_images[self.shield_index]  # 當前的護盾圖像
-            self.shield_rect = self.shield_surf.get_rect(center=self.rect.center)  # 護盾圖像的位置
+            self.shield_surf = self.shield_images[self.shield_index] 
+            self.shield_rect = self.shield_surf.get_rect(center=self.rect.center) 
         else:
             self.shield_images = None
             self.shield_surf = None
@@ -201,8 +198,8 @@ class Enemy(pygame.sprite.Sprite):
         self.pos_x = float(self.rect.x)
         self.pos_y = float(self.rect.y)
         self.hp = hp
-        self.speed = speed  # 新增的速度屬性
-        self.invincible = False  # 新增的無敵屬性
+        self.speed = speed 
+        self.invincible = False  
         self.last_update = pygame.time.get_ticks()
 
     def update(self, bullet_class, bullet_probability):
@@ -250,16 +247,16 @@ class Enemy_4(Enemy):
         super().__init__('img/enemy/lv1_to_5/base/Support_assets/Support_frame_1.png', None, None, None, 2, 200)
         self.target = None
         for enemy in enemies.sprites():
-            if self.targets.count(enemy) < 1:  # 只選擇還沒有被跟隨的目標
+            if self.targets.count(enemy) < 1: 
                 self.target = enemy
-                self.targets.append(enemy)  # 將新的目標添加到追蹤列表中
+                self.targets.append(enemy) 
                 break
         self.Is_die = False
     
     def remove_target(self):
         if self.target and self.target in self.targets:
-            self.targets.remove(self.target)  # 將目標從追蹤列表中移除
-            self.target.invincible = False  # 解除目標的護盾效果
+            self.targets.remove(self.target)  
+            self.target.invincible = False  
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_2, 0.000001)
@@ -281,41 +278,39 @@ class Enemy_4(Enemy):
             self.remove_target()
 
     def __del__(self):
-        if self.target in self.targets:  # 檢查目標是否仍在列表中
-            self.targets.remove(self.target)  # 當 Enemy_4 被刪除時，將其目標從追蹤列表中移除
+        if self.target in self.targets: 
+            self.targets.remove(self.target)  
         if self.target:
-            self.target.invincible = False  # 解除目標的護盾效果
+            self.target.invincible = False 
 
 class Boss_1(Enemy):
     def __init__(self):
         super().__init__('img/enemy/lv1_to_5/base/Battlecruiser_assets/Battlecruiser_frame_1.png', None, None, (108,132), 2, 50000)
         self.show_warning = False
         #self.warning_image = pygame.image.load('.png').convert_alpha()
-        self.rect.midtop = (SCREEN_WIDTH / 2, 0)  # 固定在最上方
+        self.rect.midtop = (SCREEN_WIDTH / 2, 0) 
         self.attack_timer = pygame.time.get_ticks()
-        self.laser_cooldown = 15000  # 每十五秒發射一發
-        self.laser_charging_duration = 2000  # 兩秒的半透明紅區塊顯示
-        self.laser_firing_duration = 2000  # 兩秒後發射雷射炮
+        self.laser_cooldown = 15000  
+        self.laser_charging_duration = 2000 
+        self.laser_firing_duration = 2000  
         self.laser_charging = False
         self.laser_firing = False
-        self.scatter_cooldown = 1000  # 每1秒發射一次散射子彈
+        self.scatter_cooldown = 1000 
         self.laser_firing_start_time = pygame.time.get_ticks()
         self.laser_charging_start_time = pygame.time.get_ticks()
         self.scatter_timer = pygame.time.get_ticks()
-        self.speed = 2  # 設定移動速度
-        self.direction = 1  # 設定移動方向，1 表示向右，-1 表示向左
+        self.speed = 2 
+        self.direction = 1  
     
     def update(self, pressed_keys=None, mouse_pos=None):
-        self.move_sideways()  # x座標左右移動
+        self.move_sideways() 
         self.attack()
         if self.hp <= 0:
             self.kill()
     
     def move_sideways(self):
-        # 如果 Boss 達到螢幕邊緣，改變移動方向
         if self.rect.right > SCREEN_WIDTH or self.rect.left < 0:
             self.direction *= -1
-        # 根據移動方向和速度更新 Boss 的位置
         self.rect.move_ip(self.speed * self.direction, 0)
     
     def attack(self):
@@ -332,7 +327,7 @@ class Boss_1(Enemy):
                 self.laser_firing = False
                 self.attack_timer = now
                 print("fire_laser")
-                self.fire_laser()  # 在這裡調用 fire_laser 方法
+                self.fire_laser()
         
         if now - self.scatter_timer >= self.scatter_cooldown:
             self.scatter_timer = now
@@ -340,18 +335,14 @@ class Boss_1(Enemy):
             self.fire_scatter_bullets()
     
     def fire_laser(self):
-        # 創建一個新的 Bullet 物件
         bullet = EnemyBullet_4(self)
-        # 將新的 Bullet 物件添加到遊戲中
         enemy_bullets.add(bullet)
         all_sprites.add(bullet)
     
     def fire_scatter_bullets(self):
-        # 創建多個新的 Bullet 物件
         for angle in [45, 0, -45]:
             bullet = EnemyBullet_3(self)
-            bullet.velocity = pygame.math.Vector2(0, 3).rotate(angle)  # 設定子彈的速度和方向
-            # 將新的 Bullet 物件添加到遊戲中
+            bullet.velocity = pygame.math.Vector2(0, 3).rotate(angle)
             enemy_bullets.add(bullet)
             all_sprites.add(bullet)
     
@@ -364,17 +355,17 @@ class Explosion(pygame.sprite.Sprite):
     def __init__(self, center, images):
         super().__init__()
         self.images = images
-        self.index = 0  # 初始化索引
-        self.surf = self.images[self.index]  # 當前的圖像
+        self.index = 0 
+        self.surf = self.images[self.index] 
         self.rect = self.surf.get_rect(center=center)
         self.last_update = pygame.time.get_ticks()
 
     def update(self, pressed_keys=None, mouse_pos=None):
-        if pygame.time.get_ticks() - self.last_update > 100:  # 每50毫秒更新一次圖像
-            self.index = (self.index + 1) % len(self.images)  # 更新索引
-            self.surf = self.images[self.index]  # 更新當前的圖像
+        if pygame.time.get_ticks() - self.last_update > 100: 
+            self.index = (self.index + 1) % len(self.images) 
+            self.surf = self.images[self.index] 
             self.last_update = pygame.time.get_ticks()
-            if self.index == 0:  # 如果所有圖像都已顯示，則刪除爆炸
+            if self.index == 0:
                 self.kill()
 
 class Explosion_1(Explosion):
@@ -382,7 +373,7 @@ class Explosion_1(Explosion):
         images = []
         for i in range(1, 9):
             image = pygame.image.load(f'img/enemy/lv1_to_5/base/Scout_assets/Scout_frame_{i}.png').convert_alpha()
-            if i in [1, 2]:  # 如果是第一幀或第二幀，則放大圖像
+            if i in [1, 2]: 
                 image = pygame.transform.scale(image, (37.4, 40.8))
             images.append(image)
         super().__init__(center, images)
@@ -408,7 +399,7 @@ class Explosion_5(Explosion):
         for i in range(1, 13):
             image = pygame.image.load(f'img/enemy/lv1_to_5/base/Battlecruiser_assets/Battlecruiser_frame_{i}.png').convert_alpha()
             if i <= 6:  # 只調整前6幀的大小
-                image = pygame.transform.scale(image, (108, 132))  # 將圖像調整為新的尺寸
+                image = pygame.transform.scale(image, (108, 132)) 
             images.append(image)
         super().__init__(center, images)
 
@@ -416,22 +407,22 @@ class Item(pygame.sprite.Sprite):
     def __init__(self, center):
         super().__init__()
         self.images = [pygame.transform.scale(pygame.image.load(f'img/item/Engines/add_hp/add_hp_frame_{i}.png').convert_alpha(), (36 , 25.5)) for i in range(1, 8)]  # 載入所有的圖片
-        self.index = 0  # 初始化索引
-        self.surf = self.images[self.index]  # 當前的圖像
+        self.index = 0 
+        self.surf = self.images[self.index] 
         self.rect = self.surf.get_rect(center=center)
-        self.pos_y = float(self.rect.y)  # 添加一個浮點數的位置屬性
+        self.pos_y = float(self.rect.y) 
         self.last_animation_time = pygame.time.get_ticks()
 
     def update(self, pressed_keys=None, mouse_pos=None):
         if pygame.time.get_ticks() - self.last_animation_time > 100:
-            self.index = (self.index + 1) % len(self.images)  # 更新索引
-            self.surf = self.images[self.index]  # 更新當前的圖像
+            self.index = (self.index + 1) % len(self.images) 
+            self.surf = self.images[self.index] 
             self.last_animation_time = pygame.time.get_ticks()
 
-        self.pos_y += 2  # 使用浮點數來更新位置
-        self.rect.y = int(self.pos_y)  # 將浮點數位置四捨五入為整數
+        self.pos_y += 2
+        self.rect.y = int(self.pos_y) 
         if self.rect.top > SCREEN_HEIGHT:
-            self.kill()  # 如果道具移出屏幕，則刪除道具
+            self.kill() 
 
 player = Player()
 items = pygame.sprite.Group()
@@ -446,8 +437,8 @@ enemies_5 = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
-score = 0  # 初始化分數
-running = True  # 初始化遊戲狀態
+score = 0 
+running = True 
 
 control = 0 # control the sprite with cursor or keyboard, keyboard = 0, cursor = 1
 
@@ -465,7 +456,7 @@ def reset_game():
     global score, level
     score, level = 0, 1
 
-current_text = 0  # 初始化文字索引
+current_text = 0 
 def setting():
     global control, current_text
     setting_running = True
@@ -500,7 +491,7 @@ def setting():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if button_1.collidepoint((mx, my)):
-                        current_text = (current_text + 1) % len(text_options)  # 切換文字
+                        current_text = (current_text + 1) % len(text_options)
                         if current_text == 0:
                             control = 0
                         else:
@@ -669,7 +660,7 @@ def check_bullet_hit(bullets, enemies, score_increment, drop_rate, Explosion):
         hit_enemies = pygame.sprite.spritecollide(bullet, enemies, False)
         for enemy in hit_enemies:
             bullet.kill()
-            if not enemy.invincible:  # 如果敵人不是無敵的，則扣除血量
+            if not enemy.invincible:
                 enemy.hp -= 50
                 if enemy.hp <= 0:
                     enemies.remove(enemy)
@@ -683,7 +674,6 @@ def check_bullet_hit(bullets, enemies, score_increment, drop_rate, Explosion):
 
 main_menu()
 
-# 遊戲主循環
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -699,13 +689,12 @@ while running:
         all_sprites.add(enemy_5)
         BOSS_GENERATION_ONCE = True
 
-    # 每隔一段時間就創建一個新的敵人
     if random.random() < ENEMY_GENERATION_THRESHOLD - level / 1000:
         enemy_1 = Enemy_1()
         enemies_1.add(enemy_1)
         all_sprites.add(enemy_1)
         enemies.add(enemy_1)
-    # 每隔一段時間就創建一個新的敵人
+
     if level > 1:
         if random.random() < ENEMY_2_GENERATION_THRESHOLD:
             enemy_2 = Enemy_2()
@@ -732,8 +721,8 @@ while running:
 
     all_sprites.update(pressed_keys, mouse_pos)
 
-    background_rect.move_ip(0, 1)  # 移動背景圖像
-    background_rect_bottom.move_ip(0, 1)  # 移動背景圖像
+    background_rect.move_ip(0, 1)
+    background_rect_bottom.move_ip(0, 1) 
 
     if background_rect.top >= SCREEN_HEIGHT:
         background_rect.bottom = background_rect_bottom.top
@@ -743,26 +732,22 @@ while running:
     screen.blit(background, background_rect)
     screen.blit(background_bottom, background_rect_bottom)
 
-    # 更新所有道具的位置
     for item in items:
         screen.blit(item.surf, item.rect)
 
-    # 更新所有道具的位置
     for enemy_bullet in enemy_bullets:
         screen.blit(enemy_bullet.surf, enemy_bullet.rect)
 
-    # 檢查子彈是否擊中了敵人
     check_bullet_hit(bullets, enemies_1, 1, 0.04, Explosion_1)
     check_bullet_hit(bullets, enemies_2, 3, 0.06, Explosion_2)
     check_bullet_hit(bullets, enemies_3, 5, 0.09, Explosion_3)
     check_bullet_hit(bullets, enemies_4, 2, 0.02, Explosion_4)
     check_bullet_hit(bullets, enemies_5, 2, 0.3, Explosion_5)
     
-    # 檢查玩家是否撞到了道具
-    hit_items = pygame.sprite.spritecollide(player, items, True)  # 在碰撞時就刪除道具
+    hit_items = pygame.sprite.spritecollide(player, items, True)
     for item in hit_items:
         if player.lives < max_lives:
-            player.lives += 1  # 玩家撞到道具，生命值加1
+            player.lives += 1 
 
     enemy_groups = [(enemies_1, 1), (enemies_2, 1), (enemies_3, 2), (enemies_4, 1), (enemies_5, 5)]
     for group, damage in enemy_groups:
@@ -772,25 +757,22 @@ while running:
                 player.invincible = True
                 player.last_hit_time = pygame.time.get_ticks()
 
-    # 檢查子彈是否撞到了玩家
     if pygame.sprite.spritecollideany(player, enemy_bullets):
         if not player.invincible:
-            player.lives -= 1  # 玩家被撞，生命值減1
-            player.invincible = True  # 玩家進入無敵狀態
-            player.last_hit_time = pygame.time.get_ticks()  # 記錄被擊中的時間
+            player.lives -= 1 
+            player.invincible = True 
+            player.last_hit_time = pygame.time.get_ticks() 
 
-    # 檢查無敵狀態是否結束
     if player.invincible and pygame.time.get_ticks() - player.last_hit_time > 3000:
-        player.invincible = False  # 三秒後，無敵狀態結束
+        player.invincible = False
 
-    # 當玩家生命值低於或等於0時結束遊戲
     if player.lives <= 0:
         game_over_screen()
     
     if score > 100:
         level += 1
-        score = 0  # 重置分數
-    if level <= len(backgrounds):  # 確保有足夠的背景圖像
+        score = 0 
+    if level <= len(backgrounds): 
         background = backgrounds[level - 1]
         background_bottom = backgrounds[level - 1]
 
@@ -805,16 +787,16 @@ while running:
             screen.blit(entity.shield_surf, entity.shield_rect)
 
     level_text = font.render('Level: {}'.format(level), True, (255, 255, 255))
-    screen.blit(level_text, (10, 10))  # 顯示分數
+    screen.blit(level_text, (10, 10)) 
 
     score_text = font.render('Score: {}'.format(score), True, (255, 255, 255))
-    screen.blit(score_text, (10, 40))  # 顯示分數
+    screen.blit(score_text, (10, 40))
 
     lives_text = font.render('Lives: {}'.format(player.lives), True, (255, 255, 255))
-    screen.blit(lives_text, (10, 70))  # 顯示關卡數
+    screen.blit(lives_text, (10, 70)) 
 
     pygame.display.flip()
-    clock.tick(185)  # 限制遊戲迴圈的速度為60幀每秒
+    clock.tick(185) 
 
 pygame.quit()
 sys.exit()

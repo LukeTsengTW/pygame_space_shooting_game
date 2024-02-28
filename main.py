@@ -48,10 +48,21 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.images['full_health'].get_rect(center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-30))
         self.lives = max_lives 
         self.invincible = False 
-        self.last_hit_time = None 
+        self.last_hit_time = 0 
         self.image_key = 'full_health'
         self.index = 0 
         self.last_shot_time = pygame.time.get_ticks()
+        self.shield_start_time = pygame.time.get_ticks()
+        self.shield_image_time = pygame.time.get_ticks()
+        self.shield_images = [pygame.image.load(f'img/player/shields/round_shield/round_shield_frame_{i}.png').convert_alpha() for i in range(1,13)]
+        self.shield_index = 0
+        self.shield_surf = None
+        self.shield_rect = None
+        self.invincible_shield = False
+
+    def activate_shield(self):
+        self.invincible_shield = True
+        self.shield_start_time = pygame.time.get_ticks()
 
     def update(self, pressed_keys, mouse_pos):
         if control == 0:
@@ -97,6 +108,14 @@ class Player(pygame.sprite.Sprite):
             image = self.images_invincible[self.image_key]
         else:
             image = self.images[self.image_key]
+
+        if self.invincible_shield:
+            if pygame.time.get_ticks() - self.shield_image_time > 100: 
+                self.shield_index = (self.shield_index + 1) % len(self.shield_images)
+                self.shield_surf = self.shield_images[self.shield_index]
+                self.shield_image_time = pygame.time.get_ticks()
+            self.shield_rect = self.shield_surf.get_rect(center = (player.rect.centerx, player.rect.centery))
+            screen.blit(player.shield_surf, player.shield_rect)
 
         screen.blit(image, self.rect)
 
@@ -221,9 +240,9 @@ class Enemy(pygame.sprite.Sprite):
 class Enemy_1(Enemy):
     def __init__(self):
         super().__init__('img/enemy/lv1_to_5/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv1_to_5/Shield/Scout_assets/Scout_Shield_frame_', (39.4, 42.8), (37.4, 40.8), 2, 100, 14)
-
+    
     def update(self, pressed_keys=None, mouse_pos=None):
-        super().update(EnemyBullet_1, 0.0008)
+        super().update(EnemyBullet_1, 0.01)
 
 class Enemy_2(Enemy):
     def __init__(self):
@@ -403,10 +422,10 @@ class Explosion_5(Explosion):
             images.append(image)
         super().__init__(center, images)
 
-class Item(pygame.sprite.Sprite):
-    def __init__(self, center):
+class BaseItem(pygame.sprite.Sprite):
+    def __init__(self, center, image_path, image_scale):
         super().__init__()
-        self.images = [pygame.transform.scale(pygame.image.load(f'img/item/Engines/add_hp/add_hp_frame_{i}.png').convert_alpha(), (36 , 25.5)) for i in range(1, 8)]  # 載入所有的圖片
+        self.images = [pygame.transform.scale(pygame.image.load(f'{image_path}{i}.png').convert_alpha(), image_scale) for i in range(1, 8)]
         self.index = 0 
         self.surf = self.images[self.index] 
         self.rect = self.surf.get_rect(center=center)
@@ -424,8 +443,19 @@ class Item(pygame.sprite.Sprite):
         if self.rect.top > SCREEN_HEIGHT:
             self.kill() 
 
+class Item_1(BaseItem):
+    def __init__(self, center):
+        super().__init__(center, 'img/item/Engines/add_hp/add_hp_frame_', (36 , 25.5))
+
+class Item_2(BaseItem):
+    def __init__(self, center):
+        super().__init__(center, 'img/item/Shield_Generators/All_around_shield_frame_', (36 , 36))
+
 player = Player()
-items = pygame.sprite.Group()
+items = {
+    'item_1': pygame.sprite.Group(),
+    'item_2': pygame.sprite.Group(),
+}
 bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
@@ -667,10 +697,24 @@ def check_bullet_hit(bullets, enemies, score_increment, drop_rate, Explosion):
                     explosion = Explosion(enemy.rect.center)
                     all_sprites.add(explosion)
                     score += score_increment
-                    if random.random() < drop_rate:
-                        item = Item(enemy.rect.center)
-                        items.add(item)
-                        all_sprites.add(item)
+                    if level >= 2:
+                        if random.random() < drop_rate:
+                            item1 = Item_1(enemy.rect.center)
+                            items['item_1'].add(item1)
+                            all_sprites.add(item1)
+                    elif level >= 4:
+                        if random.random() < drop_rate:
+                            item2 = Item_2(enemy.rect.center)
+                            items['item_2'].add(item2)
+                            all_sprites.add(item2)
+
+def item_collision(player, item_type):
+    hit_items = pygame.sprite.spritecollide(player, items[item_type], True)
+    for item in hit_items:
+        if item_type == 'item_1' and player.lives < max_lives:
+            player.lives += 1
+        elif item_type == 'item_2':
+            player.activate_shield()                       
 
 main_menu()
 
@@ -682,12 +726,12 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pause_menu()
-
-    if BOSS_GENERATION_ONCE == False:
-        enemy_5 = Boss_1()
-        enemies_5.add(enemy_5)
-        all_sprites.add(enemy_5)
-        BOSS_GENERATION_ONCE = True
+    if level == 5:
+        if BOSS_GENERATION_ONCE == False:
+            enemy_5 = Boss_1()
+            enemies_5.add(enemy_5)
+            all_sprites.add(enemy_5)
+            BOSS_GENERATION_ONCE = True
 
     if random.random() < ENEMY_GENERATION_THRESHOLD - level / 1000:
         enemy_1 = Enemy_1()
@@ -732,33 +776,32 @@ while running:
     screen.blit(background, background_rect)
     screen.blit(background_bottom, background_rect_bottom)
 
-    for item in items:
-        screen.blit(item.surf, item.rect)
+    for group in items.values():
+        for item in group:
+            screen.blit(item.surf, item.rect)
 
     for enemy_bullet in enemy_bullets:
         screen.blit(enemy_bullet.surf, enemy_bullet.rect)
 
-    check_bullet_hit(bullets, enemies_1, 1, 0.04, Explosion_1)
+    check_bullet_hit(bullets, enemies_1, 1, 0.3, Explosion_1)
     check_bullet_hit(bullets, enemies_2, 3, 0.06, Explosion_2)
     check_bullet_hit(bullets, enemies_3, 5, 0.09, Explosion_3)
     check_bullet_hit(bullets, enemies_4, 2, 0.02, Explosion_4)
     check_bullet_hit(bullets, enemies_5, 2, 0.3, Explosion_5)
     
-    hit_items = pygame.sprite.spritecollide(player, items, True)
-    for item in hit_items:
-        if player.lives < max_lives:
-            player.lives += 1 
+    for item_type in items.keys():
+        item_collision(player, item_type)
 
     enemy_groups = [(enemies_1, 1), (enemies_2, 1), (enemies_3, 2), (enemies_4, 1), (enemies_5, 5)]
     for group, damage in enemy_groups:
         if pygame.sprite.spritecollideany(player, group):
-            if not player.invincible:
+            if not player.invincible and not player.invincible_shield:
                 player.lives -= damage
                 player.invincible = True
                 player.last_hit_time = pygame.time.get_ticks()
 
     if pygame.sprite.spritecollideany(player, enemy_bullets):
-        if not player.invincible:
+        if not player.invincible and not player.invincible_shield:
             player.lives -= 1 
             player.invincible = True 
             player.last_hit_time = pygame.time.get_ticks() 
@@ -766,10 +809,13 @@ while running:
     if player.invincible and pygame.time.get_ticks() - player.last_hit_time > 3000:
         player.invincible = False
 
-    if player.lives <= 0:
+    if player.invincible_shield and pygame.time.get_ticks() - player.shield_start_time > 5000:
+        player.invincible_shield = False
+
+    if player.lives <= 0 or level > 20:
         game_over_screen()
     
-    if score > 100:
+    if score > 75:
         level += 1
         score = 0 
     if level <= len(backgrounds): 

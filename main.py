@@ -5,11 +5,18 @@ import random
 SCREEN_WIDTH, SCREEN_HEIGHT = 600, 900
 PLAYER_SPEED = 4
 BULLET_SPEED = 5
-ENEMY_GENERATION_THRESHOLD = 0.02
-ENEMY_2_GENERATION_THRESHOLD = 0.007
-ENEMY_3_GENERATION_THRESHOLD = 0.0085
-ENEMY_4_GENERATION_THRESHOLD = 0.003
+ENEMY_GENERATION_THRESHOLDS = {
+    'ENEMY_1': 0.02,
+    'ENEMY_2': 0.007,
+    'ENEMY_3': 0.0085,
+    'ENEMY_4': 0.003,
+    'ENEMY_5': 0.01,
+    'ENEMY_6': 0.007,
+}
+
 BOSS_GENERATION_ONCE = False
+
+level_start_time = 0
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -196,6 +203,10 @@ class EnemyBullet_4(EnemyBullet):
     def __init__(self, enemy):
         super().__init__(enemy, 'img/enemy/lv1_to_5/Projectiles/Ray_assets/Ray_frame_', None, 4)
 
+class EnemyBullet_5(EnemyBullet):
+    def __init__(self, enemy):
+        super().__init__(enemy, 'img/enemy/lv6_to_10/Projectile/Torpedo_assets/Torpedo_frame_', None, 4)
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, image_path, shield_image_path, shield_scale=None, scale=None, speed=1, hp=100, shield_frames=14):
         super().__init__()
@@ -302,6 +313,20 @@ class Enemy_4(Enemy):
         if self.target:
             self.target.invincible = False 
 
+class Enemy_5(Enemy):
+    def __init__(self):
+       super().__init__('img/enemy/lv6_to_10/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv6_to_10/Shield/Scout_assets/Scout_frame__', (36, 33), (36, 33), 2, 500, 19)
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        super().update(EnemyBullet_5, 0.008)
+
+class Enemy_6(Enemy):
+    def __init__(self):
+       super().__init__('img/enemy/lv6_to_10/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv6_to_10/Shield/Torpedo_assets/Torpedo_frame_', None, None, 1, 1500, 9)
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        super().update(EnemyBullet_5, 0.008)
+
 class Boss_1(Enemy):
     def __init__(self):
         super().__init__('img/enemy/lv1_to_5/base/Battlecruiser_assets/Battlecruiser_frame_1.png', None, None, (108,132), 2, 50000)
@@ -399,17 +424,17 @@ class Explosion_1(Explosion):
 
 class Explosion_2(Explosion):
     def __init__(self, center):
-        images = [pygame.image.load(f'img/enemy/lv1_to_5/base/Torpedo_assets/Torpedo_frame_{i}.png').convert_alpha() for i in range(1,9)]  # 加載所有的子彈圖像
+        images = [pygame.image.load(f'img/enemy/lv1_to_5/base/Torpedo_assets/Torpedo_frame_{i}.png').convert_alpha() for i in range(1,9)]
         super().__init__(center, images)
 
 class Explosion_3(Explosion):
     def __init__(self, center):
-        images = [pygame.image.load(f'img/enemy/lv1_to_5/base/Frigate_assets/Frigate_frame_{i}.png').convert_alpha() for i in range(1,9)]  # 加載所有的子彈圖像
+        images = [pygame.image.load(f'img/enemy/lv1_to_5/base/Frigate_assets/Frigate_frame_{i}.png').convert_alpha() for i in range(1,9)]
         super().__init__(center, images)
 
 class Explosion_4(Explosion):
     def __init__(self, center):
-        images = [pygame.image.load(f'img/enemy/lv1_to_5/base/Support_assets/Support_frame_{i}.png').convert_alpha() for i in range(1,9)]  # 加載所有的子彈圖像
+        images = [pygame.image.load(f'img/enemy/lv1_to_5/base/Support_assets/Support_frame_{i}.png').convert_alpha() for i in range(1,9)]
         super().__init__(center, images)
 
 class Explosion_5(Explosion):
@@ -420,6 +445,16 @@ class Explosion_5(Explosion):
             if i <= 6:  # 只調整前6幀的大小
                 image = pygame.transform.scale(image, (108, 132)) 
             images.append(image)
+        super().__init__(center, images)
+
+class Explosion_6(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv6_to_10/base/Scout_assets/Scout_frame_{i}.png').convert_alpha() for i in range(1,16)]
+        super().__init__(center, images)
+
+class Explosion_7(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv6_to_10/base/Torpedo_assets/Torpedo_frame_{i}.png').convert_alpha() for i in range(1,16)]
         super().__init__(center, images)
 
 class BaseItem(pygame.sprite.Sprite):
@@ -464,6 +499,8 @@ enemies_2 = pygame.sprite.Group()
 enemies_3 = pygame.sprite.Group()
 enemies_4 = pygame.sprite.Group()
 enemies_5 = pygame.sprite.Group()
+enemies_6 = pygame.sprite.Group()
+enemies_7 = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -684,7 +721,51 @@ def pause_menu():
         pygame.display.update()
         clock.tick(60)
 
-def check_bullet_hit(bullets, enemies, score_increment, drop_rate, Explosion):
+def stage_clear_screen(level, score):
+    stage_clear_running = True
+    animation_score = 0
+    animation_time = 0
+    while stage_clear_running:
+        screen.fill((0, 0, 0))
+        draw_text('Stage Clear !', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
+        draw_text(f'Score: {animation_score}', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+
+        if pygame.time.get_ticks() - animation_time > 15:
+            if animation_score <= score:
+                animation_score += 1
+                animation_time = pygame.time.get_ticks()
+        
+        button_next_level = pygame.Rect((SCREEN_WIDTH - 200) // 2 - 28, SCREEN_HEIGHT // 2 + 50, 250, 50)
+        button_back_menu = pygame.Rect((SCREEN_WIDTH - 200) // 2 - 28, SCREEN_HEIGHT // 2 + 190, 250, 50)
+        pygame.draw.rect(screen, (0, 200, 0), button_next_level)
+        pygame.draw.rect(screen, (200, 0, 0), button_back_menu)
+        draw_text('Next Level', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT // 2 + 75)
+        draw_text('Back Menu', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT // 2 + 215)
+        
+        if level > 1:
+            button_previous_level = pygame.Rect((SCREEN_WIDTH - 200 - 55) // 2, SCREEN_HEIGHT // 2 + 120, 250, 50)
+            pygame.draw.rect(screen, (0, 0, 200), button_previous_level)
+            draw_text('Previous Level', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT // 2 + 145)
+        
+        pygame.display.flip()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                if button_next_level.collidepoint((mx, my)):
+                    # 進入下一關
+                    return 'next'
+                if button_back_menu.collidepoint((mx, my)):
+                    # 返回主菜單
+                    return 'menu'
+                if level > 1 and button_previous_level.collidepoint((mx, my)):
+                    # 返回上一關
+                    return 'previous'
+
+def check_bullet_hit(bullets, enemies, score_increment, drop_rate_1, drop_rate_2, Explosion):
     global score
     for bullet in bullets:
         hit_enemies = pygame.sprite.spritecollide(bullet, enemies, False)
@@ -698,12 +779,12 @@ def check_bullet_hit(bullets, enemies, score_increment, drop_rate, Explosion):
                     all_sprites.add(explosion)
                     score += score_increment
                     if level >= 2:
-                        if random.random() < drop_rate:
+                        if random.random() < drop_rate_1:
                             item1 = Item_1(enemy.rect.center)
                             items['item_1'].add(item1)
                             all_sprites.add(item1)
                     elif level >= 4:
-                        if random.random() < drop_rate:
+                        if random.random() < drop_rate_2:
                             item2 = Item_2(enemy.rect.center)
                             items['item_2'].add(item2)
                             all_sprites.add(item2)
@@ -714,7 +795,12 @@ def item_collision(player, item_type):
         if item_type == 'item_1' and player.lives < max_lives:
             player.lives += 1
         elif item_type == 'item_2':
-            player.activate_shield()                       
+            player.activate_shield()          
+
+def reset_enemies():
+    for group in [enemies, enemies_1, enemies_2, enemies_3, enemies_4, enemies_5, enemies_6, enemies_7, enemy_bullets, items['item_1'], items['item_2']]:
+        for sprite in group:
+            sprite.kill()             
 
 main_menu()
 
@@ -732,30 +818,40 @@ while running:
             enemies_5.add(enemy_5)
             all_sprites.add(enemy_5)
             BOSS_GENERATION_ONCE = True
-
-    if random.random() < ENEMY_GENERATION_THRESHOLD - level / 1000:
-        enemy_1 = Enemy_1()
-        enemies_1.add(enemy_1)
-        all_sprites.add(enemy_1)
-        enemies.add(enemy_1)
-
-    if level > 1:
-        if random.random() < ENEMY_2_GENERATION_THRESHOLD:
-            enemy_2 = Enemy_2()
-            enemies_2.add(enemy_2)
-            all_sprites.add(enemy_2)
-            enemies.add(enemy_2)
-    if level > 2:
-        if random.random() < ENEMY_3_GENERATION_THRESHOLD:
-            enemy_3 = Enemy_3()
-            enemies_3.add(enemy_3)
-            all_sprites.add(enemy_3)
-            enemies.add(enemy_3)
-    if level > 3:
-        if random.random() < ENEMY_4_GENERATION_THRESHOLD:
-            enemy_4 = Enemy_4(enemies)
-            enemies_4.add(enemy_4)
-            all_sprites.add(enemy_4)
+    
+    if pygame.time.get_ticks() - level_start_time > 3000:
+        if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_1'] - level / 1000:
+            enemy_1 = Enemy_1()
+            enemies_1.add(enemy_1)
+            all_sprites.add(enemy_1)
+            enemies.add(enemy_1)
+        if level > 1:
+            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_2']:
+                enemy_2 = Enemy_2()
+                enemies_2.add(enemy_2)
+                all_sprites.add(enemy_2)
+                enemies.add(enemy_2)
+        if level > 2:
+            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_3']:
+                enemy_3 = Enemy_3()
+                enemies_3.add(enemy_3)
+                all_sprites.add(enemy_3)
+                enemies.add(enemy_3)
+        if level > 3:
+            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_4']:
+                enemy_4 = Enemy_4(enemies)
+                enemies_4.add(enemy_4)
+                all_sprites.add(enemy_4)
+        if level > 5:
+            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_5']:
+                enemy_6 = Enemy_5()
+                enemies_6.add(enemy_6)
+                all_sprites.add(enemy_6)
+        if level > 6:
+            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_6']:
+                enemy_7 = Enemy_6()
+                enemies_7.add(enemy_7)
+                all_sprites.add(enemy_7)
 
 
     screen.fill((0, 0, 0))
@@ -782,17 +878,19 @@ while running:
 
     for enemy_bullet in enemy_bullets:
         screen.blit(enemy_bullet.surf, enemy_bullet.rect)
-
-    check_bullet_hit(bullets, enemies_1, 1, 0.3, Explosion_1)
-    check_bullet_hit(bullets, enemies_2, 3, 0.06, Explosion_2)
-    check_bullet_hit(bullets, enemies_3, 5, 0.09, Explosion_3)
-    check_bullet_hit(bullets, enemies_4, 2, 0.02, Explosion_4)
-    check_bullet_hit(bullets, enemies_5, 2, 0.3, Explosion_5)
+    
+    check_bullet_hit(bullets, enemies_1, 1, 0.3, 0.1, Explosion_1)
+    check_bullet_hit(bullets, enemies_2, 3, 0.06, 0.02, Explosion_2)
+    check_bullet_hit(bullets, enemies_3, 5, 0.09, 0.02, Explosion_3)
+    check_bullet_hit(bullets, enemies_4, 2, 0.02, 0.02, Explosion_4)
+    check_bullet_hit(bullets, enemies_5, 2, 0.3, 0.02, Explosion_5)
+    check_bullet_hit(bullets, enemies_6, 2, 0.3, 0.02, Explosion_6)
+    check_bullet_hit(bullets, enemies_7, 4, 0.3, 0.02, Explosion_7)
     
     for item_type in items.keys():
         item_collision(player, item_type)
 
-    enemy_groups = [(enemies_1, 1), (enemies_2, 1), (enemies_3, 2), (enemies_4, 1), (enemies_5, 5)]
+    enemy_groups = [(enemies_1, 1), (enemies_2, 1), (enemies_3, 2), (enemies_4, 1), (enemies_5, 5), (enemies_6, 1)]
     for group, damage in enemy_groups:
         if pygame.sprite.spritecollideany(player, group):
             if not player.invincible and not player.invincible_shield:
@@ -816,8 +914,24 @@ while running:
         game_over_screen()
     
     if score > 75:
-        level += 1
-        score = 0 
+        action = stage_clear_screen(level, score)
+        if action == 'next':
+            reset_enemies()
+            level += 1
+            score = 0
+            player.rect.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-30)
+            player.lives = max_lives
+            level_start_time = pygame.time.get_ticks()  # 更新關卡開始時間
+        elif action == 'menu':
+            main_menu()
+        elif action == 'previous':
+            reset_enemies()
+            level -= 1
+            score = 0
+            player.rect.center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-30)
+            player.lives = max_lives
+            level_start_time = pygame.time.get_ticks()  # 更新關卡開始時間
+
     if level <= len(backgrounds): 
         background = backgrounds[level - 1]
         background_bottom = backgrounds[level - 1]

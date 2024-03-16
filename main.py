@@ -13,6 +13,8 @@ ENEMY_GENERATION_THRESHOLDS = {
     'ENEMY_5': 0.01,
     'ENEMY_6': 0.007,
     'ENEMY_7': 0.0085,
+    'ENEMY_8': 0.003,
+    'ENEMY_9': 0.001,
 }
 
 BOSS_GENERATION_ONCE = False
@@ -212,6 +214,10 @@ class EnemyBullet_6(EnemyBullet):
     def __init__(self, enemy):
         super().__init__(enemy, 'img/enemy/lv6_to_10/Projectile/Torpedo_assets/Torpedo_frame_', None, 4)
 
+class EnemyBullet_7(EnemyBullet):
+    def __init__(self, enemy):
+        super().__init__(enemy, 'img/enemy/lv6_to_10/Projectile/Ray_assets/Ray_frame_', None, 5)
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, image_path, shield_image_path, shield_scale=None, scale=None, speed=1, hp=100, shield_frames=14):
         super().__init__()
@@ -245,11 +251,12 @@ class Enemy(pygame.sprite.Sprite):
             enemy_bullets.add(bullet)
             all_sprites.add(bullet)
         if self.invincible:
-            self.shield_rect.center = self.rect.center
-            if pygame.time.get_ticks() - self.last_update > 75:
-                self.shield_index = (self.shield_index + 1) % len(self.shield_images)
-                self.shield_surf = self.shield_images[self.shield_index]
-                self.last_update = pygame.time.get_ticks()
+            if self.shield_rect is not None:
+                self.shield_rect.center = self.rect.center
+                if pygame.time.get_ticks() - self.last_update > 75:
+                    self.shield_index = (self.shield_index + 1) % len(self.shield_images)
+                    self.shield_surf = self.shield_images[self.shield_index]
+                    self.last_update = pygame.time.get_ticks()
         if self.rect.top > SCREEN_HEIGHT or self.hp <= 0:
             self.kill()
 
@@ -334,10 +341,61 @@ class Enemy_6(Enemy):
 
 class Enemy_7(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv6_to_10/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv6_to_10/Shield/Frigate_assets/Frigate_frame_', None, None, 4, 2000, 9)
+       super().__init__('img/enemy/lv6_to_10/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv6_to_10/Shield/Frigate_assets/Frigate_frame_', None, None, 4, 1000, 9)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_5, 0.009)
+
+class Enemy_8(Enemy):
+
+    targets = [] 
+
+    def __init__(self, enemies):
+        super().__init__('img/enemy/lv6_to_10/base/Support_assets/Support_frame_1.png', None, None, None, 2, 1000)
+        self.target = None
+        for enemy in enemies.sprites():
+            if self.targets.count(enemy) < 1: 
+                self.target = enemy
+                self.targets.append(enemy) 
+                break
+        self.Is_die = False
+    
+    def remove_target(self):
+        if self.target and self.target in self.targets:
+            self.targets.remove(self.target)  
+            self.target.invincible = False  
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        super().update(EnemyBullet_2, 0.000001)
+        if self.target not in enemies or not enemies:
+            self.target = None
+        if self.target:
+            if self.Is_die == False:
+                self.target.invincible = True
+        if self.target:
+            self.rect.centerx = self.target.rect.centerx + self.target.rect.width
+            self.rect.centery = self.target.rect.centery
+        else:
+            self.rect.centery += self.speed
+        if self.rect.top > SCREEN_HEIGHT or self.rect.bottom < 0 or self.rect.left > SCREEN_WIDTH or self.rect.right < 0:
+            self.kill()
+            self.remove_target()
+        if self.hp <= 0:
+            self.kill()
+            self.remove_target()
+
+    def __del__(self):
+        if self.target in self.targets: 
+            self.targets.remove(self.target)  
+        if self.target:
+            self.target.invincible = False 
+
+class Enemy_9(Enemy):
+    def __init__(self):
+       super().__init__('img/enemy/lv6_to_10/base/Battlecruiser_assets/Battlecruiser_frame_1.png', 'img/enemy/lv6_to_10/Shield/Battlecruiser_assets/Battlecruiser_frame_', None, None, 0, 6000, 9)
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        super().update(EnemyBullet_7, 0.05)
 
 class Boss_1(Enemy):
     def __init__(self):
@@ -474,6 +532,16 @@ class Explosion_8(Explosion):
         images = [pygame.image.load(f'img/enemy/lv6_to_10/base/Frigate_assets/Frigate_frame_{i}.png').convert_alpha() for i in range(1,16)]
         super().__init__(center, images)
 
+class Explosion_9(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv6_to_10/base/Support_assets/Support_frame_{i}.png').convert_alpha() for i in range(1,16)]
+        super().__init__(center, images)
+
+class Explosion_10(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv6_to_10/base/Battlecruiser_assets/Battlecruiser_frame_{i}.png').convert_alpha() for i in range(1,18)]
+        super().__init__(center, images)
+
 class BaseItem(pygame.sprite.Sprite):
     def __init__(self, center, image_path, image_scale):
         super().__init__()
@@ -511,7 +579,7 @@ items = {
 bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
-enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 9)}
+enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 11)}
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -772,6 +840,7 @@ def stage_clear_screen(level, score):
                     # 進入下一關
                     return 'next'
                 if button_back_menu.collidepoint((mx, my)):
+                    stage_clear_running = False
                     # 返回主菜單
                     return 'menu'
                 if level > 1 and button_previous_level.collidepoint((mx, my)):
@@ -811,7 +880,7 @@ def item_collision(player, item_type):
             player.activate_shield()          
 
 def reset_enemies():
-    for group in [enemies, enemies_p['enemies_1'], enemies_p['enemies_2'], enemies_p['enemies_3'], enemies_p['enemies_4'], enemies_p['enemies_5'], enemies_p['enemies_6'], enemies_p['enemies_7'], enemies_p['enemies_8'], enemy_bullets, items['item_1'], items['item_2']]:
+    for group in [enemies, enemies_p['enemies_1'], enemies_p['enemies_2'], enemies_p['enemies_3'], enemies_p['enemies_4'], enemies_p['enemies_5'], enemies_p['enemies_6'], enemies_p['enemies_7'], enemies_p['enemies_8'], enemies_p['enemies_9'], enemies_p['enemies_10'], enemy_bullets, items['item_1'], items['item_2']]:
         for sprite in group:
             sprite.kill()             
 
@@ -828,7 +897,7 @@ while running:
     
     if pygame.time.get_ticks() - level_start_time > 3000:
         if level < 6:
-            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_1'] - level / 1000:
+            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_1']:
                 enemy_1 = Enemy_1()
                 enemies_p['enemies_1'].add(enemy_1)
                 all_sprites.add(enemy_1)
@@ -850,6 +919,7 @@ while running:
                     enemy_4 = Enemy_4(enemies)
                     enemies_p['enemies_4'].add(enemy_4)
                     all_sprites.add(enemy_4)
+                    enemies.add(enemy_4)
             if level == 5:
                 if BOSS_GENERATION_ONCE == False:
                     enemy_5 = Boss_1()
@@ -861,17 +931,30 @@ while running:
                 enemy_6 = Enemy_5()
                 enemies_p['enemies_6'].add(enemy_6)
                 all_sprites.add(enemy_6)
+                enemies.add(enemy_6)
             if level > 6:
                 if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_6']:
                     enemy_7 = Enemy_6()
                     enemies_p['enemies_7'].add(enemy_7)
                     all_sprites.add(enemy_7)
+                    enemies.add(enemy_7)
             if level > 7:
                 if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_7']:
                     enemy_8 = Enemy_7()
                     enemies_p['enemies_8'].add(enemy_8)
                     all_sprites.add(enemy_8)
-
+                    enemies.add(enemy_8)
+            if level > 8:
+                if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_8']:
+                    enemy_9 = Enemy_8(enemies)
+                    enemies_p['enemies_9'].add(enemy_9)
+                    all_sprites.add(enemy_9)
+                    enemies.add(enemy_9)
+            if level > 9:
+                if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_9']: 
+                    enemy_10 = Enemy_9()
+                    enemies_p['enemies_10'].add(enemy_10)
+                    all_sprites.add(enemy_10)
 
     screen.fill((0, 0, 0))
 
@@ -904,13 +987,15 @@ while running:
     check_bullet_hit(bullets, enemies_p['enemies_4'], 2, 0.02, 0.15, Explosion_4)
     check_bullet_hit(bullets, enemies_p['enemies_5'], 2, 0.3, 0.5, Explosion_5)
     check_bullet_hit(bullets, enemies_p['enemies_6'], 2, 0.1, 0.1, Explosion_6)
-    check_bullet_hit(bullets, enemies_p['enemies_7'], 4, 0.15, 0.15, Explosion_7)
-    check_bullet_hit(bullets, enemies_p['enemies_8'], 6, 0.15, 0.15, Explosion_8)
+    check_bullet_hit(bullets, enemies_p['enemies_7'], 4, 0.15, 0.1, Explosion_7)
+    check_bullet_hit(bullets, enemies_p['enemies_8'], 6, 0.15, 0.1, Explosion_8)
+    check_bullet_hit(bullets, enemies_p['enemies_9'], 3, 0.15, 0.1, Explosion_9)
+    check_bullet_hit(bullets, enemies_p['enemies_10'], 10, 0.3, 0.3, Explosion_10)
     
     for item_type in items.keys():
         item_collision(player, item_type)
 
-    enemy_groups = [(enemies_p['enemies_1'], 1 ), (enemies_p['enemies_2'], 1), (enemies_p['enemies_3'], 2), (enemies_p['enemies_4'], 1), (enemies_p['enemies_5'], 5), (enemies_p['enemies_6'], 1), (enemies_p['enemies_7'], 2), (enemies_p['enemies_8'], 3),]
+    enemy_groups = [(enemies_p['enemies_1'], 1 ), (enemies_p['enemies_2'], 1), (enemies_p['enemies_3'], 2), (enemies_p['enemies_4'], 1), (enemies_p['enemies_5'], 5), (enemies_p['enemies_6'], 1), (enemies_p['enemies_7'], 2), (enemies_p['enemies_8'], 3), (enemies_p['enemies_9'], 1), (enemies_p['enemies_10'], 3)]
     for group, damage in enemy_groups:
         if pygame.sprite.spritecollideany(player, group):
             if not player.invincible and not player.invincible_shield:
@@ -964,7 +1049,8 @@ while running:
 
     for entity in all_sprites:
         if isinstance(entity, Enemy) and entity.invincible:
-            screen.blit(entity.shield_surf, entity.shield_rect)
+            if entity.shield_surf is not None:
+                screen.blit(entity.shield_surf, entity.shield_rect)
 
     level_text = font.render('Level: {}'.format(level), True, (255, 255, 255))
     screen.blit(level_text, (10, 10)) 

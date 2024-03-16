@@ -4,7 +4,7 @@ import random
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 600, 900
 PLAYER_SPEED = 4
-BULLET_SPEED = 5
+BULLET_SPEED = 20
 ENEMY_GENERATION_THRESHOLDS = {
     'ENEMY_1': 0.02,
     'ENEMY_2': 0.007,
@@ -12,6 +12,7 @@ ENEMY_GENERATION_THRESHOLDS = {
     'ENEMY_4': 0.003,
     'ENEMY_5': 0.01,
     'ENEMY_6': 0.007,
+    'ENEMY_7': 0.0085,
 }
 
 BOSS_GENERATION_ONCE = False
@@ -24,9 +25,9 @@ font = pygame.font.Font('font.ttf', 36)
 clock = pygame.time.Clock()
 
 max_lives = 5
-player_bullet_angle = [15,0,-15]
+player_bullet_angle = [10, 0, -10]
 
-level = 1
+level = 6
 backgrounds = [pygame.image.load(f'img/background/lv{i}_background.jpg') for i in range(1, 21)]
 background = backgrounds[0]
 background_bottom = backgrounds[0]
@@ -94,7 +95,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.bottom = SCREEN_HEIGHT
         
         if pygame.time.get_ticks() - self.last_shot_time > 15: 
-            for angle in [5, 0, -5]:
+            for angle in player_bullet_angle:
                 bullet = Bullet(self)
                 bullet.velocity = pygame.math.Vector2(0, -BULLET_SPEED).rotate(angle) 
                 bullets.add(bullet)
@@ -204,6 +205,10 @@ class EnemyBullet_4(EnemyBullet):
         super().__init__(enemy, 'img/enemy/lv1_to_5/Projectiles/Ray_assets/Ray_frame_', None, 4)
 
 class EnemyBullet_5(EnemyBullet):
+    def __init__(self, enemy):
+        super().__init__(enemy, 'img/enemy/lv6_to_10/Projectile/Bolt_assets/Bolt_frame_', None, 7)
+
+class EnemyBullet_6(EnemyBullet):
     def __init__(self, enemy):
         super().__init__(enemy, 'img/enemy/lv6_to_10/Projectile/Torpedo_assets/Torpedo_frame_', None, 4)
 
@@ -325,7 +330,14 @@ class Enemy_6(Enemy):
        super().__init__('img/enemy/lv6_to_10/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv6_to_10/Shield/Torpedo_assets/Torpedo_frame_', None, None, 1, 1500, 9)
 
     def update(self, pressed_keys=None, mouse_pos=None):
-        super().update(EnemyBullet_5, 0.008)
+        super().update(EnemyBullet_6, 0.003)
+
+class Enemy_7(Enemy):
+    def __init__(self):
+       super().__init__('img/enemy/lv6_to_10/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv6_to_10/Shield/Frigate_assets/Frigate_frame_', None, None, 4, 2000, 9)
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        super().update(EnemyBullet_5, 0.009)
 
 class Boss_1(Enemy):
     def __init__(self):
@@ -457,6 +469,11 @@ class Explosion_7(Explosion):
         images = [pygame.image.load(f'img/enemy/lv6_to_10/base/Torpedo_assets/Torpedo_frame_{i}.png').convert_alpha() for i in range(1,16)]
         super().__init__(center, images)
 
+class Explosion_8(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv6_to_10/base/Frigate_assets/Frigate_frame_{i}.png').convert_alpha() for i in range(1,16)]
+        super().__init__(center, images)
+
 class BaseItem(pygame.sprite.Sprite):
     def __init__(self, center, image_path, image_scale):
         super().__init__()
@@ -494,13 +511,7 @@ items = {
 bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
-enemies_1 = pygame.sprite.Group()
-enemies_2 = pygame.sprite.Group()
-enemies_3 = pygame.sprite.Group()
-enemies_4 = pygame.sprite.Group()
-enemies_5 = pygame.sprite.Group()
-enemies_6 = pygame.sprite.Group()
-enemies_7 = pygame.sprite.Group()
+enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 9)}
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -722,6 +733,8 @@ def pause_menu():
         clock.tick(60)
 
 def stage_clear_screen(level, score):
+    global BOSS_GENERATION_ONCE
+    BOSS_GENERATION_ONCE = False
     stage_clear_running = True
     animation_score = 0
     animation_time = 0
@@ -783,7 +796,7 @@ def check_bullet_hit(bullets, enemies, score_increment, drop_rate_1, drop_rate_2
                             item1 = Item_1(enemy.rect.center)
                             items['item_1'].add(item1)
                             all_sprites.add(item1)
-                    elif level >= 4:
+                    if level >= 4:
                         if random.random() < drop_rate_2:
                             item2 = Item_2(enemy.rect.center)
                             items['item_2'].add(item2)
@@ -798,7 +811,7 @@ def item_collision(player, item_type):
             player.activate_shield()          
 
 def reset_enemies():
-    for group in [enemies, enemies_1, enemies_2, enemies_3, enemies_4, enemies_5, enemies_6, enemies_7, enemy_bullets, items['item_1'], items['item_2']]:
+    for group in [enemies, enemies_p['enemies_1'], enemies_p['enemies_2'], enemies_p['enemies_3'], enemies_p['enemies_4'], enemies_p['enemies_5'], enemies_p['enemies_6'], enemies_p['enemies_7'], enemies_p['enemies_8'], enemy_bullets, items['item_1'], items['item_2']]:
         for sprite in group:
             sprite.kill()             
 
@@ -812,46 +825,52 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pause_menu()
-    if level == 5:
-        if BOSS_GENERATION_ONCE == False:
-            enemy_5 = Boss_1()
-            enemies_5.add(enemy_5)
-            all_sprites.add(enemy_5)
-            BOSS_GENERATION_ONCE = True
     
     if pygame.time.get_ticks() - level_start_time > 3000:
-        if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_1'] - level / 1000:
-            enemy_1 = Enemy_1()
-            enemies_1.add(enemy_1)
-            all_sprites.add(enemy_1)
-            enemies.add(enemy_1)
-        if level > 1:
-            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_2']:
-                enemy_2 = Enemy_2()
-                enemies_2.add(enemy_2)
-                all_sprites.add(enemy_2)
-                enemies.add(enemy_2)
-        if level > 2:
-            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_3']:
-                enemy_3 = Enemy_3()
-                enemies_3.add(enemy_3)
-                all_sprites.add(enemy_3)
-                enemies.add(enemy_3)
-        if level > 3:
-            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_4']:
-                enemy_4 = Enemy_4(enemies)
-                enemies_4.add(enemy_4)
-                all_sprites.add(enemy_4)
-        if level > 5:
+        if level < 6:
+            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_1'] - level / 1000:
+                enemy_1 = Enemy_1()
+                enemies_p['enemies_1'].add(enemy_1)
+                all_sprites.add(enemy_1)
+                enemies.add(enemy_1)
+            if level > 1:
+                if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_2']:
+                    enemy_2 = Enemy_2()
+                    enemies_p['enemies_2'].add(enemy_2)
+                    all_sprites.add(enemy_2)
+                    enemies.add(enemy_2)
+            if level > 2:
+                if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_3']:
+                    enemy_3 = Enemy_3()
+                    enemies_p['enemies_3'].add(enemy_3)
+                    all_sprites.add(enemy_3)
+                    enemies.add(enemy_3)
+            if level > 3:
+                if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_4']:
+                    enemy_4 = Enemy_4(enemies)
+                    enemies_p['enemies_4'].add(enemy_4)
+                    all_sprites.add(enemy_4)
+            if level == 5:
+                if BOSS_GENERATION_ONCE == False:
+                    enemy_5 = Boss_1()
+                    enemies_p['enemies_5'].add(enemy_5)
+                    all_sprites.add(enemy_5)
+                    BOSS_GENERATION_ONCE = True
+        elif level > 5:
             if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_5']:
                 enemy_6 = Enemy_5()
-                enemies_6.add(enemy_6)
+                enemies_p['enemies_6'].add(enemy_6)
                 all_sprites.add(enemy_6)
-        if level > 6:
-            if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_6']:
-                enemy_7 = Enemy_6()
-                enemies_7.add(enemy_7)
-                all_sprites.add(enemy_7)
+            if level > 6:
+                if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_6']:
+                    enemy_7 = Enemy_6()
+                    enemies_p['enemies_7'].add(enemy_7)
+                    all_sprites.add(enemy_7)
+            if level > 7:
+                if random.random() < ENEMY_GENERATION_THRESHOLDS['ENEMY_7']:
+                    enemy_8 = Enemy_7()
+                    enemies_p['enemies_8'].add(enemy_8)
+                    all_sprites.add(enemy_8)
 
 
     screen.fill((0, 0, 0))
@@ -879,18 +898,19 @@ while running:
     for enemy_bullet in enemy_bullets:
         screen.blit(enemy_bullet.surf, enemy_bullet.rect)
     
-    check_bullet_hit(bullets, enemies_1, 1, 0.3, 0.1, Explosion_1)
-    check_bullet_hit(bullets, enemies_2, 3, 0.06, 0.02, Explosion_2)
-    check_bullet_hit(bullets, enemies_3, 5, 0.09, 0.02, Explosion_3)
-    check_bullet_hit(bullets, enemies_4, 2, 0.02, 0.02, Explosion_4)
-    check_bullet_hit(bullets, enemies_5, 2, 0.3, 0.02, Explosion_5)
-    check_bullet_hit(bullets, enemies_6, 2, 0.3, 0.02, Explosion_6)
-    check_bullet_hit(bullets, enemies_7, 4, 0.3, 0.02, Explosion_7)
+    check_bullet_hit(bullets, enemies_p['enemies_1'], 1, 0.3, 0.05, Explosion_1)
+    check_bullet_hit(bullets, enemies_p['enemies_2'], 3, 0.06, 0.09, Explosion_2)
+    check_bullet_hit(bullets, enemies_p['enemies_3'], 5, 0.09, 0.1, Explosion_3)
+    check_bullet_hit(bullets, enemies_p['enemies_4'], 2, 0.02, 0.15, Explosion_4)
+    check_bullet_hit(bullets, enemies_p['enemies_5'], 2, 0.3, 0.5, Explosion_5)
+    check_bullet_hit(bullets, enemies_p['enemies_6'], 2, 0.1, 0.1, Explosion_6)
+    check_bullet_hit(bullets, enemies_p['enemies_7'], 4, 0.15, 0.15, Explosion_7)
+    check_bullet_hit(bullets, enemies_p['enemies_8'], 6, 0.15, 0.15, Explosion_8)
     
     for item_type in items.keys():
         item_collision(player, item_type)
 
-    enemy_groups = [(enemies_1, 1), (enemies_2, 1), (enemies_3, 2), (enemies_4, 1), (enemies_5, 5), (enemies_6, 1)]
+    enemy_groups = [(enemies_p['enemies_1'], 1 ), (enemies_p['enemies_2'], 1), (enemies_p['enemies_3'], 2), (enemies_p['enemies_4'], 1), (enemies_p['enemies_5'], 5), (enemies_p['enemies_6'], 1), (enemies_p['enemies_7'], 2), (enemies_p['enemies_8'], 3),]
     for group, damage in enemy_groups:
         if pygame.sprite.spritecollideany(player, group):
             if not player.invincible and not player.invincible_shield:

@@ -27,6 +27,7 @@ ENEMY_GENERATION_THRESHOLDS = {
 BOSS_GENERATION_ONCE = {
     'enemies_5': False,
     'enemies_11': False,
+    'enemies_18': False,
 }
 
 items = {
@@ -36,16 +37,18 @@ items = {
 bullets = pygame.sprite.Group()
 enemy_bullets = pygame.sprite.Group()
 enemies = pygame.sprite.Group()
-enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 18)}
+enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 19)}
 
 level_start_time = 0
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_icon(pygame.image.load('icon.png'))
+pygame.display.set_caption('Space Shooter - Pygame Edition v1.0 - By: @LukeTseng')
 font = pygame.font.Font('font.ttf', 36)
 clock = pygame.time.Clock()
 
-max_lives = 25
+max_lives = 90
 player_bullet_angle = [10, 0, -10]
 
 level = 15
@@ -248,7 +251,7 @@ class EnemyBullet_8(EnemyBullet):
         self.pos_x += self.velocity.x
         self.rect.y = int(self.pos_y)
         self.rect.x = int(self.pos_x)
-        if self.rect.top > SCREEN_HEIGHT or self.rect.bottom < 0 or self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
+        if self.rect.top > SCREEN_HEIGHT + 200 or self.rect.bottom < -200 or self.rect.left < -200 or self.rect.right > SCREEN_WIDTH + 200:
             self.kill()
 
 class EnemyBullet_9(EnemyBullet):
@@ -280,6 +283,34 @@ class EnemyBullet_12(EnemyBullet):
 class EnemyBullet_13(EnemyBullet):
     def __init__(self, enemy):
         super().__init__(enemy, 'img/enemy/lv11_to_15/Projectiles/Ray_assets/Ray_frame_', None, 5)
+
+class EnemyBullet_14(EnemyBullet):
+    def __init__(self, enemy):
+        super().__init__(enemy, 'img/enemy/lv11_to_15/Projectiles/Bullet_assets/Bullet_frame_', (20, 32), 9)
+        self.original_image = self.surf
+        self.velocity = pygame.math.Vector2(0, 0)
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        self.pos_y += self.velocity.y
+        self.pos_x += self.velocity.x
+        self.rect.y = int(self.pos_y)
+        self.rect.x = int(self.pos_x)
+        if self.rect.top > SCREEN_HEIGHT or self.rect.bottom < 0 or self.rect.left < 0 or self.rect.right > SCREEN_WIDTH:
+            self.kill()
+
+class EnemyBullet_15(EnemyBullet):
+    def __init__(self, enemy):
+        super().__init__(enemy, 'img/enemy/lv11_to_15/Projectiles/Ray_assets/Ray_frame_', (24, 152), 5)
+        self.velocity = pygame.math.Vector2(0, 0)
+        self.boss = enemy
+    def update(self, pressed_keys=None, mouse_pos=None):
+        self.surf = pygame.transform.rotate(self.images[self.index], self.boss.laser_angle)
+        self.pos_y += self.velocity.y
+        self.pos_x += self.velocity.x
+        self.rect.y = int(self.pos_y)
+        self.rect.x = int(self.pos_x)
+        if self.rect.top > SCREEN_HEIGHT + 200 or self.rect.bottom < -200 or self.rect.left < -200 or self.rect.right > SCREEN_WIDTH + 200:
+            self.kill()
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, image_path, shield_image_path, shield_scale=None, scale=None, speed=1, hp=100, shield_frames=14):
@@ -557,6 +588,8 @@ class Boss_1(Enemy):
         self.scatter_timer = pygame.time.get_ticks()
         self.speed = 2 
         self.direction = 1  
+
+        self.maxhp = 50000
     
     def update(self, pressed_keys=None, mouse_pos=None):
         self.move_sideways() 
@@ -611,7 +644,6 @@ class Boss_2(Enemy):
     def __init__(self):
         super().__init__('img/enemy/lv6_to_10/base/Dreadnought_assets/Dreadnought_frame_1.png', None, None, (102,147), 2, 100000)
         self.original_image = pygame.image.load('img/enemy/lv6_to_10/base/Dreadnought_assets/Dreadnought_frame_1.png').convert_alpha()
-        self.show_warning = False
         self.rect.midtop = (0, 0) 
         self.laser_cooldown = 2000  
         self.laser_charging = False
@@ -634,6 +666,8 @@ class Boss_2(Enemy):
             2: pygame.transform.rotate(self.original_image, 180),
             3: pygame.transform.rotate(self.original_image, 90)
         }
+
+        self.maxhp = 100000
 
     def update(self, pressed_keys=None, mouse_pos=None):
         self.move_sideways()
@@ -740,7 +774,173 @@ class Boss_2(Enemy):
                     bullet.surf = pygame.transform.rotate(bullet.original_image, self.fire_scatter_angle)
                     enemy_bullets.add(bullet)
                     all_sprites.add(bullet)
-            
+
+class Boss_3(Enemy):
+    def __init__(self):
+        super().__init__('img/enemy/lv11_to_15/base/Dreadnought_assets/Dreadnought_frame_1.png', None, None, None, 2, 300000)
+        self.original_image = pygame.image.load('img/enemy/lv11_to_15/base/Dreadnought_assets/Dreadnought_frame_1.png').convert_alpha()
+        self.rect.midtop = (0, 0) 
+        self.laser_cooldown = 2000  
+        self.laser_charging = False
+        self.laser_firing = False
+        self.scatter_cooldown = 700 
+        self.laser_timer = pygame.time.get_ticks()
+        self.scatter_timer = pygame.time.get_ticks()
+        self.rapid_fire_timer = pygame.time.get_ticks()
+        self.rapid_fire_end_time = pygame.time.get_ticks()
+        self.rapid_fire_cooldown = 20000
+        self.is_rapid_firing = False
+        self.speed = 2 
+        self.direction = 1  
+        self.move_phase = 0  # 0: right, 1: down, 2: left, 3: up
+        self.laser_angle = 0
+        self.fire_scatter_angle = 0
+        self.rotated_images = {
+            0: pygame.transform.rotate(self.original_image, -90),
+            1: self.original_image,
+            2: pygame.transform.rotate(self.original_image, 180),
+            3: pygame.transform.rotate(self.original_image, 90)
+        }
+
+        self.scatter_skill_timer = pygame.time.get_ticks()
+        self.scatter_skill_cooldown = 15000  # 15 seconds
+        self.scatter_skill_active = False
+        self.scatter_skill_shooting_time = 0
+        self.scatter_skill_start_time = 0
+        self.condition_met_time = 0
+
+        self.maxhp = 300000
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        self.move_sideways()
+        self.fire_scatter_bullets()
+        self.fire_laser()
+
+        if self.hp <= 0:
+            self.kill()
+        
+        if not self.is_rapid_firing and pygame.time.get_ticks() - self.rapid_fire_timer >= self.rapid_fire_cooldown:
+            self.is_rapid_firing = True
+            self.rapid_fire_start_time = pygame.time.get_ticks()
+            self.rapid_fire_end_time = pygame.time.get_ticks()
+
+        if self.is_rapid_firing:
+            if pygame.time.get_ticks() - self.rapid_fire_end_time >= 5000:
+                self.is_rapid_firing = False
+                self.rapid_fire_timer = pygame.time.get_ticks()
+        
+        if not self.scatter_skill_active and pygame.time.get_ticks() - self.scatter_skill_timer >= self.scatter_skill_cooldown:
+            self.scatter_skill_active = True
+            self.direction = 0
+            self.scatter_skill_start_time = pygame.time.get_ticks()
+        
+        if self.scatter_skill_active:
+            print("scatter_skill_active")
+            self.rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)  # move to center
+            if pygame.time.get_ticks() - self.scatter_skill_start_time >= 1000:  # every second
+                self.direction = (self.direction + 1) % 4
+                self.surf = self.rotated_images[self.direction]
+                self.scatter_skill_start_time = pygame.time.get_ticks()  # reset timer
+        
+            if self.direction == 3:
+                self.condition_met_time = pygame.time.get_ticks()  # record the time when the condition is met
+
+            if self.condition_met_time > 0 and pygame.time.get_ticks() - self.condition_met_time >= 1000:
+                self.scatter_skill_active = False
+                self.rect.midtop = (0, 0)  # move back to edge
+                self.scatter_skill_timer = pygame.time.get_ticks()  # reset cooldown timer
+                self.condition_met_time = 0  # reset the condition met time
+
+    def move_sideways(self):
+        if not self.scatter_skill_active:
+            if self.move_phase == 0:  # Moving right
+                if self.rect.right >= SCREEN_WIDTH:
+                    self.move_phase = 1
+                    self.direction = 0
+                else:
+                    self.rect.move_ip(self.speed, 0)
+                    self.surf = self.rotated_images[self.direction]
+            elif self.move_phase == 1:  # Moving down
+                if self.rect.bottom >= SCREEN_HEIGHT:
+                    self.move_phase = 2
+                    self.direction = 2
+                else:
+                    self.rect.move_ip(0, self.speed)
+                    self.surf = self.rotated_images[self.direction]
+            elif self.move_phase == 2:  # Moving left
+                if self.rect.left <= 0:
+                    self.move_phase = 3
+                    self.direction = 3
+                else:
+                    self.rect.move_ip(-self.speed, 0)
+                    self.surf = self.rotated_images[self.direction]
+            elif self.move_phase == 3:  # Moving up
+                if self.rect.top <= 0:
+                    self.move_phase = 0
+                    self.direction = 1
+                else:
+                    self.rect.move_ip(0, -self.speed)
+                    self.surf = self.rotated_images[self.direction]
+
+    def fire_laser(self):
+        now = pygame.time.get_ticks()
+        bullet = EnemyBullet_15(self)
+        if now - self.laser_timer >= self.laser_cooldown or (self.is_rapid_firing and pygame.time.get_ticks() - self.rapid_fire_start_time >= 100):
+            self.laser_timer = now
+            self.rapid_fire_start_time = pygame.time.get_ticks()
+            if self.direction == 0:
+                self.laser_angle = -90
+                bullet.velocity = pygame.math.Vector2(-3, 0)
+            elif self.direction == 1:
+                self.laser_angle = 0
+                bullet.velocity = pygame.math.Vector2(0, 3)
+            elif self.direction == 2:
+                self.laser_angle = 180
+                bullet.velocity = pygame.math.Vector2(0, -3)
+            elif self.direction == 3:
+                self.laser_angle = 90
+                bullet.velocity = pygame.math.Vector2(3, 0)
+            enemy_bullets.add(bullet)
+            all_sprites.add(bullet)
+
+    def fire_scatter_bullets(self):
+        now = pygame.time.get_ticks()
+        if now - self.scatter_timer >= self.scatter_cooldown or (self.scatter_skill_active and now - self.scatter_skill_shooting_time >= 200):
+            self.scatter_timer = now
+            if self.direction == 0:
+                for angle in [-225, -270, -315] :
+                    bullet = EnemyBullet_14(self)
+                    bullet.velocity = pygame.math.Vector2(0, 3).rotate(angle)
+                    self.fire_scatter_angle = -90
+                    bullet.surf = pygame.transform.rotate(bullet.original_image, self.fire_scatter_angle)
+                    enemy_bullets.add(bullet)
+                    all_sprites.add(bullet)
+            elif self.direction == 1:
+                for angle in [45, 0, -45]:
+                    bullet = EnemyBullet_14(self)
+                    bullet.velocity = pygame.math.Vector2(0, 3).rotate(angle)
+                    self.fire_scatter_angle = 0
+                    bullet.surf = pygame.transform.rotate(bullet.original_image, self.fire_scatter_angle)
+                    enemy_bullets.add(bullet)
+                    all_sprites.add(bullet)
+            elif self.direction == 2:
+                for angle in [225, 180, 135]:
+                    bullet = EnemyBullet_14(self)
+                    bullet.velocity = pygame.math.Vector2(0, 3).rotate(angle)
+                    self.fire_scatter_angle = 180
+                    bullet.surf = pygame.transform.rotate(bullet.original_image, self.fire_scatter_angle)
+                    enemy_bullets.add(bullet)
+                    all_sprites.add(bullet)
+            elif self.direction == 3:
+                for angle in [-135, -90, -45]:
+                    bullet = EnemyBullet_14(self)
+                    bullet.velocity = pygame.math.Vector2(0, 3).rotate(angle)
+                    self.fire_scatter_angle = 90
+                    bullet.surf = pygame.transform.rotate(bullet.original_image, self.fire_scatter_angle)
+                    enemy_bullets.add(bullet)
+                    all_sprites.add(bullet)
+            self.scatter_skill_shooting_time = pygame.time.get_ticks()
+
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, center, images):
         super().__init__()
@@ -858,6 +1058,11 @@ class Explosion_16(Explosion):
 class Explosion_17(Explosion):
     def __init__(self, center):
         images = [pygame.image.load(f'img/enemy/lv11_to_15/base/Battlecruiser_assets/Battlecruiser_frame_{i}.png').convert_alpha() for i in range(1,13)]
+        super().__init__(center, images)
+
+class Explosion_18(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv11_to_15/base/Dreadnought_assets/Dreadnought_frame_{i}.png').convert_alpha() for i in range(1,13)]
         super().__init__(center, images)
 
 class BaseItem(pygame.sprite.Sprite):
@@ -1199,6 +1404,10 @@ def item_collision(player, item_type):
 def reset_enemies():
     for sprite in chain(*[enemies, *enemies_p.values(), enemy_bullets, items['item_1'], items['item_2']]):
         sprite.kill()
+    
+    BOSS_GENERATION_ONCE['enemies_5'] = False
+    BOSS_GENERATION_ONCE['enemies_11'] = False
+    BOSS_GENERATION_ONCE['enemies_18'] = False
 
 def generate_enemy(level, enemy_type, enemy_class, boss=False, Is_support=False):
     if boss:
@@ -1219,6 +1428,28 @@ def generate_enemy(level, enemy_type, enemy_class, boss=False, Is_support=False)
                 enemy = enemy_class(enemies)
                 enemies_p[enemy_type].add(enemy)
                 all_sprites.add(enemy)
+
+def draw_health_bar(boss, screen):
+    max_health = boss.maxhp
+    current_health = boss.hp
+    health_bar_length = 100  # Total length of the health bar
+    current_health_length = (current_health / max_health) * health_bar_length
+    health_bar_height = 10  # Height of the health bar
+    # Adjust health bar position based on boss direction
+    if boss.direction == 0:  # Right
+        health_bar_x = boss.rect.right - health_bar_length
+        health_bar_y = boss.rect.top - health_bar_height - 10
+    elif boss.direction == 1:  # Down
+        health_bar_x = boss.rect.left
+        health_bar_y = boss.rect.bottom + 10
+    elif boss.direction == 2:  # Left
+        health_bar_x = boss.rect.left
+        health_bar_y = boss.rect.top - health_bar_height - 10
+    elif boss.direction == 3:  # Up
+        health_bar_x = boss.rect.left
+        health_bar_y = boss.rect.top - health_bar_height - 20
+    pygame.draw.rect(screen, (255,0,0), (health_bar_x, health_bar_y, health_bar_length, health_bar_height))
+    pygame.draw.rect(screen, (0,255,0), (health_bar_x, health_bar_y, current_health_length, health_bar_height))
 
 main_menu()
 
@@ -1263,6 +1494,8 @@ while running:
             if level > 13:
                 generate_enemy(level, 'enemies_16', Enemy_14, Is_support=True)
                 generate_enemy(level, 'enemies_17', Enemy_15) 
+            if level == 15:
+                generate_enemy(level, 'enemies_18', Boss_3, boss=True)
 
     screen.fill((0, 0, 0))
 
@@ -1281,6 +1514,21 @@ while running:
 
     screen.blit(background, background_rect)
     screen.blit(background_bottom, background_rect_bottom)
+
+    for boss in enemies_p['enemies_18']:
+        draw_health_bar(boss, screen)
+
+    for boss in enemies_p['enemies_11']:
+        draw_health_bar(boss, screen)
+
+    for boss in enemies_p['enemies_5']:
+        max_health = boss.maxhp
+        current_health = boss.hp
+        health_bar_length = 100  # Total length of the health bar
+        current_health_length = (current_health / max_health) * health_bar_length
+        health_bar_height = 10  # Height of the health bar
+        pygame.draw.rect(screen, (255,0,0), (boss.rect.x, boss.rect.bottom + 10, health_bar_length, health_bar_height))
+        pygame.draw.rect(screen, (0,255,0), (boss.rect.x, boss.rect.bottom + 10, current_health_length, health_bar_height))
 
     for group in items.values():
         for item in group:
@@ -1306,6 +1554,7 @@ while running:
     check_bullet_hit(bullets, enemies_p['enemies_15'], 9, 0.25, 0.25, Explosion_15)
     check_bullet_hit(bullets, enemies_p['enemies_16'], 11, 0.25, 0.25, Explosion_16)
     check_bullet_hit(bullets, enemies_p['enemies_17'], 13, 0.35, 0.35, Explosion_17)
+    check_bullet_hit(bullets, enemies_p['enemies_18'], 400, 0.6, 0.6, Explosion_18)
 
     for item_type in items.keys():
         item_collision(player, item_type)
@@ -1328,6 +1577,7 @@ while running:
         'enemies_15': 3,
         'enemies_16': 3,
         'enemies_17': 5,
+        'enemies_18': 5,
     }
 
     enemy_groups = [(enemies_p[key], damage) for key, damage in enemy_damage_values.items()]
@@ -1403,7 +1653,7 @@ while running:
     screen.blit(lives_text, (10, 70)) 
 
     pygame.display.flip()
-    clock.tick(185) 
+    clock.tick(180) 
 
 pygame.quit()
 sys.exit()

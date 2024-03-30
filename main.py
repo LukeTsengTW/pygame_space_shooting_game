@@ -5,7 +5,7 @@ from itertools import chain
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 600, 900
 PLAYER_SPEED = 4
-BULLET_SPEED = 50
+BULLET_SPEED = 25
 ENEMY_GENERATION_THRESHOLDS = {
     'enemies_1': 0.02,
     'enemies_2': 0.005,
@@ -19,12 +19,24 @@ ENEMY_GENERATION_THRESHOLDS = {
     'enemies_12': 0.009,
     'enemies_13': 0.009,
     'enemies_14': 0.005,
+    'enemies_15': 0.003,
+    'enemies_16': 0.002,
+    'enemies_17': 0.0006,
 }
 
 BOSS_GENERATION_ONCE = {
     'enemies_5': False,
     'enemies_11': False,
 }
+
+items = {
+    'item_1': pygame.sprite.Group(),
+    'item_2': pygame.sprite.Group(),
+}
+bullets = pygame.sprite.Group()
+enemy_bullets = pygame.sprite.Group()
+enemies = pygame.sprite.Group()
+enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 18)}
 
 level_start_time = 0
 
@@ -33,10 +45,10 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 font = pygame.font.Font('font.ttf', 36)
 clock = pygame.time.Clock()
 
-max_lives = 5
+max_lives = 25
 player_bullet_angle = [10, 0, -10]
 
-level = 11
+level = 15
 backgrounds = [pygame.image.load(f'img/background/lv{i}_background.jpg') for i in range(1, 21)]
 background = backgrounds[0]
 background_bottom = backgrounds[0]
@@ -265,6 +277,10 @@ class EnemyBullet_12(EnemyBullet):
     def __init__(self, enemy):
         super().__init__(enemy, 'img/enemy/lv11_to_15/Projectiles/Rocket_assets/Rocket_frame_', None, 7)
 
+class EnemyBullet_13(EnemyBullet):
+    def __init__(self, enemy):
+        super().__init__(enemy, 'img/enemy/lv11_to_15/Projectiles/Ray_assets/Ray_frame_', None, 5)
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, image_path, shield_image_path, shield_scale=None, scale=None, speed=1, hp=100, shield_frames=14):
         super().__init__()
@@ -464,6 +480,64 @@ class Enemy_12(Enemy):
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_12, 0.0015)
+
+class Enemy_13(Enemy):
+    def __init__(self):
+       super().__init__('img/enemy/lv11_to_15/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv11_to_15/Shields/Frigate_assets/Frigate_frame_', None, None, 3, 1500, 11)
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        super().update(EnemyBullet_10, 0.003)
+
+class Enemy_14(Enemy):
+
+    targets = [] 
+
+    def __init__(self, enemies):
+        super().__init__('img/enemy/lv11_to_15/base/Support_assets/Support_frame_1.png', None, None, None, 2, 2000)
+        self.target = None
+        for enemy in enemies.sprites():
+            if self.targets.count(enemy) < 1: 
+                self.target = enemy
+                self.targets.append(enemy) 
+                break
+        self.Is_die = False
+    
+    def remove_target(self):
+        if self.target and self.target in self.targets:
+            self.targets.remove(self.target)  
+            self.target.invincible = False  
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        super().update(EnemyBullet_2, 0.000001)
+        if self.target not in enemies or not enemies:
+            self.target = None
+        if self.target:
+            if self.Is_die == False:
+                self.target.invincible = True
+        if self.target:
+            self.rect.centerx = self.target.rect.centerx + self.target.rect.width
+            self.rect.centery = self.target.rect.centery
+        else:
+            self.rect.centery += self.speed
+        if self.rect.top > SCREEN_HEIGHT or self.rect.bottom < 0 or self.rect.left > SCREEN_WIDTH or self.rect.right < 0:
+            self.kill()
+            self.remove_target()
+        if self.hp <= 0:
+            self.kill()
+            self.remove_target()
+
+    def __del__(self):
+        if self.target in self.targets: 
+            self.targets.remove(self.target)  
+        if self.target:
+            self.target.invincible = False 
+
+class Enemy_15(Enemy):
+    def __init__(self):
+       super().__init__('img/enemy/lv11_to_15/base/Battlecruiser_assets/Battlecruiser_frame_1.png', 'img/enemy/lv11_to_15/Shields/Battlecruiser_assets/Battlecruiser_frame_', None, None, 0, 6000, 12)
+
+    def update(self, pressed_keys=None, mouse_pos=None):
+        super().update(EnemyBullet_13, 0.03)
 
 class Boss_1(Enemy):
     def __init__(self):
@@ -771,6 +845,21 @@ class Explosion_14(Explosion):
         images = [pygame.image.load(f'img/enemy/lv11_to_15/base/Torpedo_assets/Torpedo_frame_{i}.png').convert_alpha() for i in range(1,8)]
         super().__init__(center, images)
 
+class Explosion_15(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv11_to_15/base/Frigate_assets/Frigate_frame_{i}.png').convert_alpha() for i in range(1,10)]
+        super().__init__(center, images)
+
+class Explosion_16(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv11_to_15/base/Support_assets/Support_frame_{i}.png').convert_alpha() for i in range(1,8)]
+        super().__init__(center, images)
+
+class Explosion_17(Explosion):
+    def __init__(self, center):
+        images = [pygame.image.load(f'img/enemy/lv11_to_15/base/Battlecruiser_assets/Battlecruiser_frame_{i}.png').convert_alpha() for i in range(1,13)]
+        super().__init__(center, images)
+
 class BaseItem(pygame.sprite.Sprite):
     def __init__(self, center, image_path, image_scale):
         super().__init__()
@@ -801,14 +890,6 @@ class Item_2(BaseItem):
         super().__init__(center, 'img/item/Shield_Generators/All_around_shield_frame_', (36 , 36))
 
 player = Player()
-items = {
-    'item_1': pygame.sprite.Group(),
-    'item_2': pygame.sprite.Group(),
-}
-bullets = pygame.sprite.Group()
-enemy_bullets = pygame.sprite.Group()
-enemies = pygame.sprite.Group()
-enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 15)}
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
 
@@ -1138,7 +1219,6 @@ def generate_enemy(level, enemy_type, enemy_class, boss=False, Is_support=False)
                 enemy = enemy_class(enemies)
                 enemies_p[enemy_type].add(enemy)
                 all_sprites.add(enemy)
-                enemies.add(enemy)
 
 main_menu()
 
@@ -1178,6 +1258,11 @@ while running:
             generate_enemy(level, 'enemies_13', Enemy_11)
             if level > 11:
                 generate_enemy(level, 'enemies_14', Enemy_12)
+            if level > 12:
+                generate_enemy(level, 'enemies_15', Enemy_13)
+            if level > 13:
+                generate_enemy(level, 'enemies_16', Enemy_14, Is_support=True)
+                generate_enemy(level, 'enemies_17', Enemy_15) 
 
     screen.fill((0, 0, 0))
 
@@ -1218,6 +1303,9 @@ while running:
     check_bullet_hit(bullets, enemies_p['enemies_12'], 3, 0.15, 0.1, Explosion_12)
     check_bullet_hit(bullets, enemies_p['enemies_13'], 5, 0.15, 0.1, Explosion_13)
     check_bullet_hit(bullets, enemies_p['enemies_14'], 7, 0.2, 0.1, Explosion_14)
+    check_bullet_hit(bullets, enemies_p['enemies_15'], 9, 0.25, 0.25, Explosion_15)
+    check_bullet_hit(bullets, enemies_p['enemies_16'], 11, 0.25, 0.25, Explosion_16)
+    check_bullet_hit(bullets, enemies_p['enemies_17'], 13, 0.35, 0.35, Explosion_17)
 
     for item_type in items.keys():
         item_collision(player, item_type)
@@ -1237,6 +1325,9 @@ while running:
         'enemies_12': 2,
         'enemies_13': 2,
         'enemies_14': 2,
+        'enemies_15': 3,
+        'enemies_16': 3,
+        'enemies_17': 5,
     }
 
     enemy_groups = [(enemies_p[key], damage) for key, damage in enemy_damage_values.items()]

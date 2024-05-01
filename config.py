@@ -29,3 +29,25 @@ BOSS_GENERATION_ONCE = {
 
 max_lives = 90
 player_bullet_angle = [5, 0, -5]
+
+enemy_hp = {
+    'enemies_1': 100,
+    'enemies_2': 600,
+    'enemies_3': 300,
+    'enemies_4': 200,
+    'enemies_5': 50000,
+    'enemies_6': 500,
+    'enemies_7': 1500,
+    'enemies_8': 1000,
+    'enemies_9': 1000,
+    'enemies_10': 4000,
+    'enemies_11': 200000,
+    'enemies_12': 2000,
+    'enemies_13': 1500,
+    'enemies_14': 3000,
+    'enemies_15': 1500,
+    'enemies_16': 2000,
+    'enemies_17': 6000,
+    'enemies_18': 300000,
+}
+

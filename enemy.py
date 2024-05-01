@@ -47,21 +47,21 @@ class Enemy(pygame.sprite.Sprite):
 
 class Enemy_1(Enemy):
     def __init__(self):
-        super().__init__('img/enemy/lv1_to_5/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv1_to_5/Shield/Scout_assets/Scout_Shield_frame_', (39.4, 42.8), (37.4, 40.8), 2, 100, 14)
+        super().__init__('img/enemy/lv1_to_5/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv1_to_5/Shield/Scout_assets/Scout_Shield_frame_', (39.4, 42.8), (37.4, 40.8), 2, enemy_hp["enemies_1"], 14)
     
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_1, 0.01)
 
 class Enemy_2(Enemy):
     def __init__(self):
-        super().__init__('img/enemy/lv1_to_5/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv1_to_5/Shield/Torpedo_assets/Torpedo_frame_', None, None, 1, 600, 11)
+        super().__init__('img/enemy/lv1_to_5/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv1_to_5/Shield/Torpedo_assets/Torpedo_frame_', None, None, 1, enemy_hp["enemies_2"], 11)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_2, 0.002)
 
 class Enemy_3(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv1_to_5/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv1_to_5/Shield/Frigate_assets/Frigate_Shield_frame_', None, None, 4, 300, 39)
+       super().__init__('img/enemy/lv1_to_5/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv1_to_5/Shield/Frigate_assets/Frigate_Shield_frame_', None, None, 4, enemy_hp["enemies_3"], 39)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_2, 0.000001)
@@ -71,7 +71,7 @@ class Enemy_4(Enemy):
     targets = [] 
 
     def __init__(self, enemies):
-        super().__init__('img/enemy/lv1_to_5/base/Support_assets/Support_frame_1.png', None, None, None, 2, 200)
+        super().__init__('img/enemy/lv1_to_5/base/Support_assets/Support_frame_1.png', None, None, None, 2, enemy_hp["enemies_4"])
         self.target = None
         for enemy in enemies.sprites():
             if self.targets.count(enemy) < 1: 
@@ -112,21 +112,21 @@ class Enemy_4(Enemy):
 
 class Enemy_5(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv6_to_10/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv6_to_10/Shield/Scout_assets/Scout_frame__', (36, 33), (36, 33), 2, 500, 19)
+       super().__init__('img/enemy/lv6_to_10/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv6_to_10/Shield/Scout_assets/Scout_frame__', (36, 33), (36, 33), 2, enemy_hp["enemies_6"], 19)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_5, 0.003)
 
 class Enemy_6(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv6_to_10/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv6_to_10/Shield/Torpedo_assets/Torpedo_frame_', None, None, 1, 1500, 9)
+       super().__init__('img/enemy/lv6_to_10/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv6_to_10/Shield/Torpedo_assets/Torpedo_frame_', None, None, 1, enemy_hp["enemies_7"], 9)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_6, 0.003)
 
 class Enemy_7(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv6_to_10/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv6_to_10/Shield/Frigate_assets/Frigate_frame_', None, None, 4, 1000, 9)
+       super().__init__('img/enemy/lv6_to_10/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv6_to_10/Shield/Frigate_assets/Frigate_frame_', None, None, 4, enemy_hp["enemies_8"], 9)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_5, 0.003)
@@ -136,7 +136,7 @@ class Enemy_8(Enemy):
     targets = [] 
 
     def __init__(self, enemies):
-        super().__init__('img/enemy/lv6_to_10/base/Support_assets/Support_frame_1.png', None, None, None, 2, 1000)
+        super().__init__('img/enemy/lv6_to_10/base/Support_assets/Support_frame_1.png', None, None, None, 2, enemy_hp["enemies_9"])
         self.target = None
         for enemy in enemies.sprites():
             if self.targets.count(enemy) < 1: 
@@ -177,35 +177,35 @@ class Enemy_8(Enemy):
 
 class Enemy_9(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv6_to_10/base/Battlecruiser_assets/Battlecruiser_frame_1.png', 'img/enemy/lv6_to_10/Shield/Battlecruiser_assets/Battlecruiser_frame_', None, None, 0, 4000, 9)
+       super().__init__('img/enemy/lv6_to_10/base/Battlecruiser_assets/Battlecruiser_frame_1.png', 'img/enemy/lv6_to_10/Shield/Battlecruiser_assets/Battlecruiser_frame_', None, None, 0, enemy_hp["enemies_10"], 9)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_7, 0.03)
 
 class Enemy_10(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv11_to_15/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv11_to_15/Shields/Scout_assets/Scout_frame_', None, None, 1, 2000, 14)
+       super().__init__('img/enemy/lv11_to_15/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv11_to_15/Shields/Scout_assets/Scout_frame_', None, None, 1, enemy_hp["enemies_12"], 14)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_10, 0.003)
 
 class Enemy_11(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv11_to_15/base/Bomber_assets/Bomber_frame_1.png', 'img/enemy/lv11_to_15/Shields/Bomber_assets/Bomber_frame_', None, None, 2, 1500, 11)
+       super().__init__('img/enemy/lv11_to_15/base/Bomber_assets/Bomber_frame_1.png', 'img/enemy/lv11_to_15/Shields/Bomber_assets/Bomber_frame_', None, None, 2, enemy_hp["enemies_13"], 11)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_11, 0.0015)
 
 class Enemy_12(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv11_to_15/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv11_to_15/Shields/Torpedo_assets/Torpedo_frame_', None, None, 1, 3000, 9)
+       super().__init__('img/enemy/lv11_to_15/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv11_to_15/Shields/Torpedo_assets/Torpedo_frame_', None, None, 1, enemy_hp["enemies_14"], 9)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_12, 0.0015)
 
 class Enemy_13(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv11_to_15/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv11_to_15/Shields/Frigate_assets/Frigate_frame_', None, None, 3, 1500, 11)
+       super().__init__('img/enemy/lv11_to_15/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv11_to_15/Shields/Frigate_assets/Frigate_frame_', None, None, 3, enemy_hp["enemies_15"], 11)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_10, 0.003)
@@ -215,7 +215,7 @@ class Enemy_14(Enemy):
     targets = [] 
 
     def __init__(self, enemies):
-        super().__init__('img/enemy/lv11_to_15/base/Support_assets/Support_frame_1.png', None, None, None, 2, 2000)
+        super().__init__('img/enemy/lv11_to_15/base/Support_assets/Support_frame_1.png', None, None, None, 2, enemy_hp["enemies_16"])
         self.target = None
         for enemy in enemies.sprites():
             if self.targets.count(enemy) < 1: 
@@ -256,14 +256,14 @@ class Enemy_14(Enemy):
 
 class Enemy_15(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv11_to_15/base/Battlecruiser_assets/Battlecruiser_frame_1.png', 'img/enemy/lv11_to_15/Shields/Battlecruiser_assets/Battlecruiser_frame_', None, None, 0, 6000, 12)
+       super().__init__('img/enemy/lv11_to_15/base/Battlecruiser_assets/Battlecruiser_frame_1.png', 'img/enemy/lv11_to_15/Shields/Battlecruiser_assets/Battlecruiser_frame_', None, None, 0, enemy_hp["enemies_17"], 12)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_13, 0.03)
 
 class Boss_1(Enemy):
     def __init__(self):
-        super().__init__('img/enemy/lv1_to_5/base/Battlecruiser_assets/Battlecruiser_frame_1.png', None, None, (108,132), 2, 50000)
+        super().__init__('img/enemy/lv1_to_5/base/Battlecruiser_assets/Battlecruiser_frame_1.png', None, None, (108,132), 2, enemy_hp["enemies_5"])
         self.show_warning = False
         #self.warning_image = pygame.image.load('.png').convert_alpha()
         self.rect.midtop = (SCREEN_WIDTH / 2, 0) 
@@ -333,7 +333,7 @@ class Boss_1(Enemy):
 
 class Boss_2(Enemy):
     def __init__(self):
-        super().__init__('img/enemy/lv6_to_10/base/Dreadnought_assets/Dreadnought_frame_1.png', None, None, (102,147), 2, 200000)
+        super().__init__('img/enemy/lv6_to_10/base/Dreadnought_assets/Dreadnought_frame_1.png', None, None, (102,147), 2, enemy_hp["enemies_11"])
         self.original_image = pygame.image.load('img/enemy/lv6_to_10/base/Dreadnought_assets/Dreadnought_frame_1.png').convert_alpha()
         self.rect.midtop = (0, 0) 
         self.laser_cooldown = 2000  
@@ -468,7 +468,7 @@ class Boss_2(Enemy):
 
 class Boss_3(Enemy):
     def __init__(self):
-        super().__init__('img/enemy/lv11_to_15/base/Dreadnought_assets/Dreadnought_frame_1.png', None, None, None, 2, 300000)
+        super().__init__('img/enemy/lv11_to_15/base/Dreadnought_assets/Dreadnought_frame_1.png', None, None, None, 2, enemy_hp["enemies_18"])
         self.original_image = pygame.image.load('img/enemy/lv11_to_15/base/Dreadnought_assets/Dreadnought_frame_1.png').convert_alpha()
         self.rect.midtop = (0, 0) 
         self.laser_cooldown = 2000  

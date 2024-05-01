@@ -21,7 +21,9 @@ class Player(pygame.sprite.Sprite):
             self.images_invincible[key].blit(self.images[key], (0, 0))
             self.images_invincible[key].fill((255, 255, 255, 128), special_flags=pygame.BLEND_RGBA_MULT)
         self.rect = self.images['full_health'].get_rect(center = (SCREEN_WIDTH/2, SCREEN_HEIGHT-30))
-        self.lives = max_lives 
+        self.lives = max_lives
+        self.coin = 0
+        self.damage = 50
         self.invincible = False 
         self.last_hit_time = 0 
         self.image_key = 'full_health'

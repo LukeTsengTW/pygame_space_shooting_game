@@ -16,6 +16,10 @@ enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 19)}
 
 level_start_time = 0
 
+damage_level = 0
+bullet_speed_level = 0
+live_level = 0
+
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_icon(pygame.image.load('icon.png'))
@@ -144,7 +148,7 @@ def main_menu():
         clock.tick(60)
 
 def upgrade_UI():
-    global BULLET_SPEED, max_lives
+    global BULLET_SPEED, max_lives, damage_level, bullet_speed_level, live_level
     upgrade_UI_running = True
     while upgrade_UI_running:
         screen.fill((0,0,0))
@@ -152,7 +156,7 @@ def upgrade_UI():
 
         mx, my = pygame.mouse.get_pos()
 
-        button_width = 385
+        button_width = 450
         button_height = 50
         button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 180, button_width, button_height)
         button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 60, button_width, button_height)
@@ -163,10 +167,13 @@ def upgrade_UI():
         pygame.draw.rect(screen, (0, 0, 200), button_2)
         pygame.draw.rect(screen, (200, 0, 200), button_3)
         pygame.draw.rect(screen, (200, 0, 0), button_4)
+
+        coin_text = font.render('Coin: {}'.format(player.coin), True, (255, 185, 0))
+        screen.blit(coin_text, (10, 100)) 
         
-        draw_text('Add bullet', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 180)
-        draw_text('Making bullet speed up', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 60)
-        draw_text('Add Live', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60)
+        draw_text(f'Lv.{damage_level} Add bullet damage', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 180)
+        draw_text(f'Lv.{bullet_speed_level} Add bullet speed', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 60)
+        draw_text(f'Lv.{live_level} Add Live', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60)
         draw_text('Back main menu', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 180)
 
         for event in pygame.event.get():
@@ -176,12 +183,15 @@ def upgrade_UI():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if button_1.collidepoint((mx, my)):
-                        pass
+                        player.damage += 1
+                        damage_level += 1
                     if button_2.collidepoint((mx, my)):
                         BULLET_SPEED += 1
+                        bullet_speed_level += 1
                         print("Bullet's speed is ", BULLET_SPEED, " now")
                     if button_3.collidepoint((mx, my)):
                         max_lives += 1
+                        live_level += 1
                         print("max_lives is ", max_lives, " now")
                     if button_4.collidepoint((mx, my)):
                         upgrade_UI_running = False
@@ -318,7 +328,7 @@ def check_bullet_hit(bullets, enemies, score_increment, drop_rate_1, drop_rate_2
         for enemy in hit_enemies:
             bullet.kill()
             if not enemy.invincible:
-                enemy.hp -= 50
+                enemy.hp -= player.damage
                 if enemy.hp <= 0:
                     enemies.remove(enemy)
                     explosion = Explosion(enemy.rect.center)
@@ -592,8 +602,11 @@ while running:
     score_text = font.render('Score: {}'.format(score), True, (255, 255, 255))
     screen.blit(score_text, (10, 40))
 
-    lives_text = font.render('Lives: {}'.format(player.lives), True, (255, 255, 255))
+    lives_text = font.render('Live: {}'.format(player.lives), True, (0, 235, 0))
     screen.blit(lives_text, (10, 70)) 
+
+    coin_text = font.render('Coin: {}'.format(player.coin), True, (255, 185, 0))
+    screen.blit(coin_text, (10, 100)) 
 
     pygame.display.flip()
     clock.tick(180) 

@@ -17,8 +17,11 @@ enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 19)}
 level_start_time = 0
 
 damage_level = 0
+damage_level_need_coin = 0
 bullet_speed_level = 0
+bullet_speed_level_need_coin = 0
 live_level = 0
+live_level_need_coin = 0
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -51,9 +54,20 @@ def reset_game():
         sprite.kill()
 
     all_sprites.add(player)
-    player.lives = 5
-    global score, level
+    player.lives = max_lives
+    global score, level, level_start_time
     score, level = 0, 1
+    level_start_time = pygame.time.get_ticks()
+
+def reset_continue_game():
+    for sprite in all_sprites:
+        sprite.kill()
+
+    all_sprites.add(player)
+    player.lives = max_lives
+    global score, level_start_time
+    score = 0
+    level_start_time = pygame.time.get_ticks()
 
 current_text = 0 
 def setting():
@@ -111,20 +125,23 @@ def main_menu():
 
         button_width = 200
         button_height = 50
-        button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 180, button_width, button_height)
-        button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 60, button_width, button_height)
-        button_3 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 60, button_width, button_height)
-        button_4 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 180, button_width, button_height)
+        button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 240, button_width, button_height)
+        button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 120, button_width, button_height)
+        button_3 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2, button_width, button_height)
+        button_4 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 120, button_width, button_height)
+        button_5 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 240, button_width, button_height)
 
         pygame.draw.rect(screen, (0, 200, 0), button_1)
         pygame.draw.rect(screen, (0, 0, 200), button_2)
         pygame.draw.rect(screen, (200, 0, 200), button_3)
-        pygame.draw.rect(screen, (200, 0, 0), button_4)
+        pygame.draw.rect(screen, (0, 200, 200), button_4)
+        pygame.draw.rect(screen, (200, 0, 0), button_5)
         
-        draw_text('Play', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 180)
-        draw_text('Upgrade', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 60)
-        draw_text('Setting', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60)
-        draw_text('Exit', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 180)
+        draw_text('Play', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 240)
+        draw_text('Continue', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 120)
+        draw_text('Upgrade', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        draw_text('Setting', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 120)
+        draw_text('Exit', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 240)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -135,12 +152,18 @@ def main_menu():
                     if button_1.collidepoint((mx, my)):
                         main_running = False
                         player.out_of_game = False
+                        reset_game()
                         break
                     if button_2.collidepoint((mx, my)):
-                        upgrade_UI()
+                        main_running = False
+                        player.out_of_game = False
+                        reset_continue_game()
+                        break
                     if button_3.collidepoint((mx, my)):
-                        setting()
+                        upgrade_UI()
                     if button_4.collidepoint((mx, my)):
+                        setting()
+                    if button_5.collidepoint((mx, my)):
                         pygame.quit()
                         sys.exit()
 
@@ -148,7 +171,7 @@ def main_menu():
         clock.tick(60)
 
 def upgrade_UI():
-    global BULLET_SPEED, max_lives, damage_level, bullet_speed_level, live_level
+    global BULLET_SPEED, max_lives, damage_level, bullet_speed_level, live_level, damage_level_need_coin, bullet_speed_level_need_coin, live_level_need_coin
     upgrade_UI_running = True
     while upgrade_UI_running:
         screen.fill((0,0,0))
@@ -158,10 +181,10 @@ def upgrade_UI():
 
         button_width = 450
         button_height = 50
-        button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 180, button_width, button_height)
-        button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 60, button_width, button_height)
-        button_3 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 60, button_width, button_height)
-        button_4 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 180, button_width, button_height)
+        button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 200, button_width, button_height)
+        button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 100, button_width, button_height)
+        button_3 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2, button_width, button_height)
+        button_4 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 100, button_width, button_height)
 
         pygame.draw.rect(screen, (0, 200, 0), button_1)
         pygame.draw.rect(screen, (0, 0, 200), button_2)
@@ -171,10 +194,14 @@ def upgrade_UI():
         coin_text = font.render('Coin: {}'.format(player.coin), True, (255, 185, 0))
         screen.blit(coin_text, (10, 100)) 
         
-        draw_text(f'Lv.{damage_level} Add bullet damage', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 180)
-        draw_text(f'Lv.{bullet_speed_level} Add bullet speed', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 60)
-        draw_text(f'Lv.{live_level} Add Live', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60)
-        draw_text('Back main menu', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 180)
+        draw_text(f'Lv.{damage_level} Add bullet damage', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 200)
+        draw_text(f'Lv.{bullet_speed_level} Add bullet speed', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100)
+        draw_text(f'Lv.{live_level} Add Live', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        draw_text('Back main menu', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100)
+
+        draw_text(f'Cost: {damage_level_need_coin} coins', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 200 + button_height + 5)
+        draw_text(f'Cost: {bullet_speed_level_need_coin} coins', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100 + button_height + 5)
+        draw_text(f'Cost: {live_level_need_coin} coins', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + button_height + 5)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -185,13 +212,16 @@ def upgrade_UI():
                     if button_1.collidepoint((mx, my)):
                         player.damage += 1
                         damage_level += 1
+                        damage_level_need_coin = damage_level * 1234
                     if button_2.collidepoint((mx, my)):
                         BULLET_SPEED += 1
                         bullet_speed_level += 1
+                        bullet_speed_level_need_coin = bullet_speed_level * 321
                         print("Bullet's speed is ", BULLET_SPEED, " now")
                     if button_3.collidepoint((mx, my)):
                         max_lives += 1
                         live_level += 1
+                        live_level_need_coin = live_level * 5432
                         print("max_lives is ", max_lives, " now")
                     if button_4.collidepoint((mx, my)):
                         upgrade_UI_running = False
@@ -202,7 +232,6 @@ def upgrade_UI():
 def game_over_screen():
     game_over_running = True
     player.out_of_game = True
-    reset_game()
     while game_over_running:
         screen.fill((0, 0, 0))
         draw_text('Game Over', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
@@ -256,7 +285,6 @@ def pause_menu():
                         setting()
                     if button_3.collidepoint((mx, my)):
                         pause_running = False
-                        reset_game()
                         main_menu()
 
         pygame.display.update()
@@ -321,7 +349,7 @@ def stage_clear_screen(level, score):
                     player.out_of_game = False
                     return 'restart'
 
-def check_bullet_hit(bullets, enemies, score_increment, drop_rate_1, drop_rate_2, Explosion):
+def check_bullet_hit(bullets, enemies, score_increment, drop_rate_1, drop_rate_2, Explosion, gain_coin=0):
     global score
     for bullet in bullets:
         hit_enemies = pygame.sprite.spritecollide(bullet, enemies, False)
@@ -330,6 +358,7 @@ def check_bullet_hit(bullets, enemies, score_increment, drop_rate_1, drop_rate_2
             if not enemy.invincible:
                 enemy.hp -= player.damage
                 if enemy.hp <= 0:
+                    player.coin += gain_coin
                     enemies.remove(enemy)
                     explosion = Explosion(enemy.rect.center)
                     all_sprites.add(explosion)
@@ -490,24 +519,24 @@ while running:
     for enemy_bullet in enemy_bullets:
         screen.blit(enemy_bullet.surf, enemy_bullet.rect)
     
-    check_bullet_hit(bullets, enemies_p['enemies_1'], 1, 0.3, 0.05, Explosion_1)
-    check_bullet_hit(bullets, enemies_p['enemies_2'], 3, 0.06, 0.09, Explosion_2)
-    check_bullet_hit(bullets, enemies_p['enemies_3'], 5, 0.09, 0.1, Explosion_3)
-    check_bullet_hit(bullets, enemies_p['enemies_4'], 2, 0.02, 0.15, Explosion_4)
-    check_bullet_hit(bullets, enemies_p['enemies_5'], 100, 0.3, 0.5, Explosion_5)
-    check_bullet_hit(bullets, enemies_p['enemies_6'], 2, 0.1, 0.1, Explosion_6)
-    check_bullet_hit(bullets, enemies_p['enemies_7'], 4, 0.15, 0.1, Explosion_7)
-    check_bullet_hit(bullets, enemies_p['enemies_8'], 6, 0.15, 0.1, Explosion_8)
-    check_bullet_hit(bullets, enemies_p['enemies_9'], 3, 0.15, 0.1, Explosion_9)
-    check_bullet_hit(bullets, enemies_p['enemies_10'], 10, 0.3, 0.3, Explosion_10)
-    check_bullet_hit(bullets, enemies_p['enemies_11'], 400, 0.5, 0.5, Explosion_11)
-    check_bullet_hit(bullets, enemies_p['enemies_12'], 3, 0.15, 0.1, Explosion_12)
-    check_bullet_hit(bullets, enemies_p['enemies_13'], 5, 0.15, 0.1, Explosion_13)
-    check_bullet_hit(bullets, enemies_p['enemies_14'], 7, 0.2, 0.1, Explosion_14)
-    check_bullet_hit(bullets, enemies_p['enemies_15'], 9, 0.25, 0.25, Explosion_15)
-    check_bullet_hit(bullets, enemies_p['enemies_16'], 11, 0.25, 0.25, Explosion_16)
-    check_bullet_hit(bullets, enemies_p['enemies_17'], 13, 0.35, 0.35, Explosion_17)
-    check_bullet_hit(bullets, enemies_p['enemies_18'], 600, 0.6, 0.6, Explosion_18)
+    check_bullet_hit(bullets, enemies_p['enemies_1'], 1, 0.3, 0.05, Explosion_1, 1)
+    check_bullet_hit(bullets, enemies_p['enemies_2'], 3, 0.06, 0.09, Explosion_2, 3)
+    check_bullet_hit(bullets, enemies_p['enemies_3'], 5, 0.09, 0.1, Explosion_3, 5)
+    check_bullet_hit(bullets, enemies_p['enemies_4'], 2, 0.02, 0.15, Explosion_4, 7)
+    check_bullet_hit(bullets, enemies_p['enemies_5'], 100, 0.3, 0.5, Explosion_5, 10000)
+    check_bullet_hit(bullets, enemies_p['enemies_6'], 2, 0.1, 0.1, Explosion_6, 3)
+    check_bullet_hit(bullets, enemies_p['enemies_7'], 4, 0.15, 0.1, Explosion_7, 5)
+    check_bullet_hit(bullets, enemies_p['enemies_8'], 6, 0.15, 0.1, Explosion_8, 7)
+    check_bullet_hit(bullets, enemies_p['enemies_9'], 3, 0.15, 0.1, Explosion_9, 9)
+    check_bullet_hit(bullets, enemies_p['enemies_10'], 10, 0.3, 0.3, Explosion_10, 11)
+    check_bullet_hit(bullets, enemies_p['enemies_11'], 400, 0.5, 0.5, Explosion_11, 50000)
+    check_bullet_hit(bullets, enemies_p['enemies_12'], 3, 0.15, 0.1, Explosion_12, 5)
+    check_bullet_hit(bullets, enemies_p['enemies_13'], 5, 0.15, 0.1, Explosion_13, 7)
+    check_bullet_hit(bullets, enemies_p['enemies_14'], 7, 0.2, 0.1, Explosion_14, 9)
+    check_bullet_hit(bullets, enemies_p['enemies_15'], 9, 0.25, 0.25, Explosion_15, 11)
+    check_bullet_hit(bullets, enemies_p['enemies_16'], 11, 0.25, 0.25, Explosion_16, 13)
+    check_bullet_hit(bullets, enemies_p['enemies_17'], 13, 0.35, 0.35, Explosion_17, 15)
+    check_bullet_hit(bullets, enemies_p['enemies_18'], 600, 0.6, 0.6, Explosion_18, 100000)
 
     for item_type in items.keys():
         item_collision(player, item_type)

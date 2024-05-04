@@ -115,61 +115,6 @@ def setting():
         pygame.display.update()
         clock.tick(60)
 
-def main_menu():
-    main_running = True
-    while main_running:
-        screen.fill((0,0,0))
-        draw_text('Main Menu', font, (255, 255, 255), screen, SCREEN_WIDTH/2, 150)
-
-        mx, my = pygame.mouse.get_pos()
-
-        button_width = 200
-        button_height = 50
-        button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 240, button_width, button_height)
-        button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 120, button_width, button_height)
-        button_3 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2, button_width, button_height)
-        button_4 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 120, button_width, button_height)
-        button_5 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 240, button_width, button_height)
-
-        pygame.draw.rect(screen, (0, 200, 0), button_1)
-        pygame.draw.rect(screen, (0, 0, 200), button_2)
-        pygame.draw.rect(screen, (200, 0, 200), button_3)
-        pygame.draw.rect(screen, (0, 200, 200), button_4)
-        pygame.draw.rect(screen, (200, 0, 0), button_5)
-        
-        draw_text('Play', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 240)
-        draw_text('Continue', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 120)
-        draw_text('Upgrade', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-        draw_text('Setting', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 120)
-        draw_text('Exit', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 240)
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    if button_1.collidepoint((mx, my)):
-                        main_running = False
-                        player.out_of_game = False
-                        reset_game()
-                        break
-                    if button_2.collidepoint((mx, my)):
-                        main_running = False
-                        player.out_of_game = False
-                        reset_continue_game()
-                        break
-                    if button_3.collidepoint((mx, my)):
-                        upgrade_UI()
-                    if button_4.collidepoint((mx, my)):
-                        setting()
-                    if button_5.collidepoint((mx, my)):
-                        pygame.quit()
-                        sys.exit()
-
-        pygame.display.update()
-        clock.tick(60)
-
 def upgrade_UI():
     global BULLET_SPEED, max_lives, damage_level, bullet_speed_level, live_level, damage_level_need_coin, bullet_speed_level_need_coin, live_level_need_coin
     upgrade_UI_running = True
@@ -225,6 +170,114 @@ def upgrade_UI():
                         print("max_lives is ", max_lives, " now")
                     if button_4.collidepoint((mx, my)):
                         upgrade_UI_running = False
+
+        pygame.display.update()
+        clock.tick(60)
+
+def credits():
+    credits_running = True
+    while credits_running:
+        screen.fill((0,0,0))
+        draw_text('Credits', font, (255, 255, 255), screen, SCREEN_WIDTH/2, 150)
+
+        mx, my = pygame.mouse.get_pos()
+
+        button_width = 200
+        button_height = 50
+        button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 350, button_width, button_height)
+
+        pygame.draw.rect(screen, (200, 0, 0), button_1)
+        
+        draw_text('Programmer', font, (90, 90, 225), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 240)
+        draw_text('LukeTseng', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 200)
+
+        draw_text('Game Designer', font, (90, 90, 225), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 140)
+        draw_text('LukeTseng', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100)
+
+        draw_text('Graph Artist (Material Usage)', font, (90, 90, 225), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 40)
+        draw_text('FoozleCC', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
+        draw_text('Background (Material Usage)', font, (90, 90, 225), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60)
+        draw_text('Leonardo AI', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100)
+
+        draw_text('Music (Material Usage)', font, (90, 90, 225), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 160)
+        draw_text('OpenGameArt : Oblidivm', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200)
+
+        draw_text('Game Engine : Pygame', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 280)
+
+        draw_text('Back', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 350)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if button_1.collidepoint((mx, my)):
+                        credits_running = False
+
+        pygame.display.update()
+        clock.tick(60)
+
+def main_menu():
+    main_running = True
+    
+    button_width = 200
+    button_height = 50
+
+    while main_running:
+        screen.fill((0,0,0))
+
+        draw_text('Main Menu', font, (255, 255, 255), screen, SCREEN_WIDTH/2, 100)
+
+        mx, my = pygame.mouse.get_pos()
+
+        button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 240, button_width, button_height)
+        button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 120, button_width, button_height)
+        button_3 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2, button_width, button_height)
+        button_4 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 120, button_width, button_height)
+        button_5 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 240, button_width, button_height)
+        button_6 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 360, button_width, button_height)
+
+        pygame.draw.rect(screen, (0, 200, 0), button_1)
+        pygame.draw.rect(screen, (0, 0, 200), button_2)
+        pygame.draw.rect(screen, (200, 0, 200), button_3)
+        pygame.draw.rect(screen, (0, 200, 200), button_4)
+        pygame.draw.rect(screen, (200, 0, 0), button_5)
+        pygame.draw.rect(screen, (200, 200, 0), button_6)
+        
+        draw_text('Play', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 240)
+        draw_text('Continue', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 120)
+        draw_text('Upgrade', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        draw_text('Setting', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 120)
+        draw_text('Exit', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 240)
+        draw_text('Credits', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 360)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if button_1.collidepoint((mx, my)):
+                        main_running = False
+                        player.out_of_game = False
+                        reset_game()
+                        break
+                    if button_2.collidepoint((mx, my)):
+                        main_running = False
+                        player.out_of_game = False
+                        reset_continue_game()
+                        break
+                    if button_3.collidepoint((mx, my)):
+                        upgrade_UI()
+                    if button_4.collidepoint((mx, my)):
+                        setting()
+                    if button_6.collidepoint((mx, my)):
+                        credits()
+                    if button_5.collidepoint((mx, my)):
+                        pygame.quit()
+                        sys.exit()
 
         pygame.display.update()
         clock.tick(60)
@@ -432,6 +485,10 @@ def draw_health_bar(boss, screen):
     pygame.draw.rect(screen, (255,0,0), (health_bar_x, health_bar_y, health_bar_length, health_bar_height))
     pygame.draw.rect(screen, (0,255,0), (health_bar_x, health_bar_y, current_health_length, health_bar_height))
 
+def display_text(text, value, color, position):
+    rendered_text = font.render('{}: {}'.format(text, value), True, color)
+    screen.blit(rendered_text, position)
+
 main_menu()
 
 while running:
@@ -625,17 +682,10 @@ while running:
             if entity.shield_surf is not None:
                 screen.blit(entity.shield_surf, entity.shield_rect)
 
-    level_text = font.render('Level: {}'.format(level), True, (255, 255, 255))
-    screen.blit(level_text, (10, 10)) 
-
-    score_text = font.render('Score: {}'.format(score), True, (255, 255, 255))
-    screen.blit(score_text, (10, 40))
-
-    lives_text = font.render('Live: {}'.format(player.lives), True, (0, 235, 0))
-    screen.blit(lives_text, (10, 70)) 
-
-    coin_text = font.render('Coin: {}'.format(player.coin), True, (255, 185, 0))
-    screen.blit(coin_text, (10, 100)) 
+    display_text('Level', level, (255, 255, 255), (10, 10))
+    display_text('Score', score, (255, 255, 255), (10, 40))
+    display_text('Live', player.lives, (0, 235, 0), (10, 70))
+    display_text('Coin', player.coin, (255, 185, 0), (10, 100))
 
     pygame.display.flip()
     clock.tick(180) 

@@ -25,6 +25,6 @@ Items : https://foozlecc.itch.io/void-pickups-pack
 
 # About Author
 
-This game is made by LukeTseng, a high school stduent（鼓山高中學生）. Although there are still some flaws in the code, please forgive me :) 
+This game is made by LukeTseng, a high school stduent. Although there are still some flaws in the code, please forgive me :) 
 
 The original intention of making this game is to realize my dream, a game developer

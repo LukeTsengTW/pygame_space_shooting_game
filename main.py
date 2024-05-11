@@ -239,6 +239,10 @@ def chose_level():
             pygame.draw.rect(screen, button_color, button)
             draw_text(f'Level {i}', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, 50 * i + 20)
 
+        button_back = pygame.Rect((SCREEN_WIDTH - 200) // 2, SCREEN_HEIGHT - 100, 200, 40)
+        pygame.draw.rect(screen, (100, 100, 100), button_back)
+        draw_text('Back', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 80)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -254,26 +258,30 @@ def chose_level():
                             player.out_of_game = False
                             reset_continue_game()
                             break
+                if button_back.collidepoint((mx, my)):
+                    chose_level_running = False
+                    main_menu()
         pygame.display.update()
         clock.tick(60)
 
 def main_menu():
     main_running = True
-    
     button_width = 200
     button_height = 50
+    button_texts = ['Play', 'Upgrade', 'Setting', 'Exit', 'Credits']
+    button_colors = [(0, 200, 0), (200, 0, 200), (0, 200, 200), (200, 0, 0), (200, 200, 0)]
+    button_actions = [chose_level, upgrade_UI, setting, sys.exit, credits]
+    buttons = [pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 240 + i * 120, button_width, button_height) for i in range(len(button_texts))]
 
     background = pygame.image.load(f'img/background/menu_background.jpg')
     background_bottom = background
-
     background_rect = background.get_rect()
     background_rect_bottom = background_bottom.get_rect()
     background_rect_bottom.top = background_rect.bottom
 
     while main_running:
         background_rect.move_ip(0, 2)
-        background_rect_bottom.move_ip(0, 2) 
-
+        background_rect_bottom.move_ip(0, 2)
         if background_rect.top >= SCREEN_HEIGHT:
             background_rect.bottom = background_rect_bottom.top
         if background_rect_bottom.top >= SCREEN_HEIGHT:
@@ -281,31 +289,12 @@ def main_menu():
 
         screen.blit(background, background_rect)
         screen.blit(background_bottom, background_rect_bottom)
-
-        draw_text('Main Menu', font, (255, 255, 255), screen, SCREEN_WIDTH/2, 100)
+        draw_text('Main Menu', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, 100)
 
         mx, my = pygame.mouse.get_pos()
-
-        button_1 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 240, button_width, button_height)
-        button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 120, button_width, button_height)
-        button_3 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2, button_width, button_height)
-        button_4 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 120, button_width, button_height)
-        button_5 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 240, button_width, button_height)
-        button_6 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 360, button_width, button_height)
-
-        pygame.draw.rect(screen, (0, 200, 0), button_1)
-        pygame.draw.rect(screen, (0, 0, 200), button_2)
-        pygame.draw.rect(screen, (200, 0, 200), button_3)
-        pygame.draw.rect(screen, (0, 200, 200), button_4)
-        pygame.draw.rect(screen, (200, 0, 0), button_5)
-        pygame.draw.rect(screen, (200, 200, 0), button_6)
-        
-        draw_text('New Game', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 240)
-        draw_text('Continue', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 120)
-        draw_text('Upgrade', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-        draw_text('Setting', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 120)
-        draw_text('Exit', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 240)
-        draw_text('Credits', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 360)
+        for idx, button in enumerate(buttons):
+            pygame.draw.rect(screen, button_colors[idx], button)
+            draw_text(button_texts[idx], font, (255, 255, 255), screen, SCREEN_WIDTH // 2, button.y + 20)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -313,23 +302,11 @@ def main_menu():
                 sys.exit()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    if button_1.collidepoint((mx, my)):
-                        main_running = False
-                        player.out_of_game = False
-                        reset_game()
-                        break
-                    if button_2.collidepoint((mx, my)):
-                        main_running = False
-                        chose_level()
-                    if button_3.collidepoint((mx, my)):
-                        upgrade_UI()
-                    if button_4.collidepoint((mx, my)):
-                        setting()
-                    if button_6.collidepoint((mx, my)):
-                        credits()
-                    if button_5.collidepoint((mx, my)):
-                        pygame.quit()
-                        sys.exit()
+                    for idx, button in enumerate(buttons):
+                        if button.collidepoint((mx, my)):
+                            if idx == 0:
+                                main_running = False
+                            button_actions[idx]()
 
         pygame.display.update()
         clock.tick(60)

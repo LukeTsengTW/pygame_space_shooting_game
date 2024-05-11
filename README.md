@@ -1,13 +1,13 @@
-# The Environment
-The environment I am using is Python 3.12.2, so I recommend you install Python 3.12.2.
+# Environment
+The development environment is in Python 3.12.2.
 
-Open your cmd, type `pip install pygame` to the pygame.
+Type `pip install pygame` in cmd to install pygame
 
-# The Control
+# Controller
 
 Using your mouse or keyboard : `← → ↑ ↓` to control the character.
 
-# The Image Source
+# Image Source
 
 Background : Leonardo.ai
 
@@ -25,6 +25,10 @@ Items : https://foozlecc.itch.io/void-pickups-pack
 
 # About Author
 
-This game is made by LukeTseng, a high school stduent（鼓山高中學生）. Although there are still some flaws in the code, please forgive me :) 
+This game is made by LukeTseng, a high school stduent. Although there are still some flaws in the code, please forgive me :) 
 
 The original intention of making this game is to realize my dream, a game developer
+
+# About The Game
+
+This game is still undergoing modifications. You can use the code of this game and modify it, I don't mind.

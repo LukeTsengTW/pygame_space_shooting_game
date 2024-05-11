@@ -155,19 +155,25 @@ def upgrade_UI():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if button_1.collidepoint((mx, my)):
-                        player.damage += 1
-                        damage_level += 1
-                        damage_level_need_coin = damage_level * 1234
+                        if player.coin >= damage_level_need_coin:
+                            player.coin -= damage_level_need_coin
+                            player.damage += 1
+                            damage_level += 1
+                            damage_level_need_coin = damage_level * 1234
                     if button_2.collidepoint((mx, my)):
-                        BULLET_SPEED += 1
-                        bullet_speed_level += 1
-                        bullet_speed_level_need_coin = bullet_speed_level * 321
-                        print("Bullet's speed is ", BULLET_SPEED, " now")
+                        if player.coin >= bullet_speed_level_need_coin:
+                            player.coin -= bullet_speed_level_need_coin
+                            BULLET_SPEED += 1
+                            bullet_speed_level += 1
+                            bullet_speed_level_need_coin = bullet_speed_level * 321
+                            print("Bullet's speed is ", BULLET_SPEED, " now")
                     if button_3.collidepoint((mx, my)):
-                        max_lives += 1
-                        live_level += 1
-                        live_level_need_coin = live_level * 5432
-                        print("max_lives is ", max_lives, " now")
+                        if player.coin >= live_level_need_coin:
+                            player.coin -= live_level_need_coin
+                            max_lives += 1
+                            live_level += 1
+                            live_level_need_coin = live_level * 5432
+                            print("max_lives is ", max_lives, " now")
                     if button_4.collidepoint((mx, my)):
                         upgrade_UI_running = False
 
@@ -219,14 +225,62 @@ def credits():
         pygame.display.update()
         clock.tick(60)
 
+def chose_level():
+    global level
+    chose_level_running = True
+    while chose_level_running:
+        screen.fill((0, 0, 0))
+        for i in range(1, 16):
+            if i <= level:
+                button_color = (0, 200, 0)  # Green for current level
+            else:
+                button_color = (200, 0, 0)  # Red for locked levels
+            button = pygame.Rect((SCREEN_WIDTH - 200) // 2, 50 * i, 200, 40)
+            pygame.draw.rect(screen, button_color, button)
+            draw_text(f'Level {i}', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, 50 * i + 20)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                for i in range(1, 16):
+                    button = pygame.Rect((SCREEN_WIDTH - 200) // 2, 50 * i, 200, 40)
+                    if button.collidepoint((mx, my)):
+                        if i <= level:
+                            level = i
+                            chose_level_running = False
+                            player.out_of_game = False
+                            reset_continue_game()
+                            break
+        pygame.display.update()
+        clock.tick(60)
+
 def main_menu():
     main_running = True
     
     button_width = 200
     button_height = 50
 
+    background = pygame.image.load(f'img/background/menu_background.jpg')
+    background_bottom = background
+
+    background_rect = background.get_rect()
+    background_rect_bottom = background_bottom.get_rect()
+    background_rect_bottom.top = background_rect.bottom
+
     while main_running:
-        screen.fill((0,0,0))
+        background_rect.move_ip(0, 2)
+        background_rect_bottom.move_ip(0, 2) 
+
+        if background_rect.top >= SCREEN_HEIGHT:
+            background_rect.bottom = background_rect_bottom.top
+        if background_rect_bottom.top >= SCREEN_HEIGHT:
+            background_rect_bottom.bottom = background_rect.top
+
+        screen.blit(background, background_rect)
+        screen.blit(background_bottom, background_rect_bottom)
 
         draw_text('Main Menu', font, (255, 255, 255), screen, SCREEN_WIDTH/2, 100)
 
@@ -246,7 +300,7 @@ def main_menu():
         pygame.draw.rect(screen, (200, 0, 0), button_5)
         pygame.draw.rect(screen, (200, 200, 0), button_6)
         
-        draw_text('Play', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 240)
+        draw_text('New Game', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 240)
         draw_text('Continue', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 120)
         draw_text('Upgrade', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         draw_text('Setting', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 120)
@@ -266,9 +320,7 @@ def main_menu():
                         break
                     if button_2.collidepoint((mx, my)):
                         main_running = False
-                        player.out_of_game = False
-                        reset_continue_game()
-                        break
+                        chose_level()
                     if button_3.collidepoint((mx, my)):
                         upgrade_UI()
                     if button_4.collidepoint((mx, my)):
@@ -639,7 +691,7 @@ while running:
     if player.invincible_shield and pygame.time.get_ticks() - player.shield_start_time > 5000:
         player.invincible_shield = False
 
-    if player.lives <= 0 or level > 20:
+    if player.lives <= 0 or level > 15:
         game_over_screen()
     
     if score > 75 + (level * 10) * 5: # 75 + (level * 10) * 5

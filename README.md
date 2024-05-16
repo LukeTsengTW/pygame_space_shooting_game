@@ -32,3 +32,5 @@ The original intention of making this game is to realize my dream, a game develo
 # About The Game
 
 This game is still undergoing modifications. You can use the code of this game and modify it, I don't mind.
+
+Made by LukeTseng ( 鼓山高中 _ 電腦社社長 ).

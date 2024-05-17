@@ -1,11 +1,28 @@
+# pygame_space_shooting_game
+
+This is a simple 2D pixel vertical scrolling shooting game created by Luke Tseng, a high school student. 
+
+In addition, the game was created through the author's one hour on weekdays and five hours on Saturdays and Sundays.
+
 # Environment
+
 The development environment is in Python 3.12.2.
 
-Type `pip install pygame` in cmd to install pygame
+Type `pip install pygame` in cmd to install pygame.
 
-# Controller
+# Control
 
-Using your mouse or keyboard : `← → ↑ ↓` to control the character.
+Using your mouse or keyboard (you need go to setting UI to change these) : `← → ↑ ↓` to control the character.
+
+# Features
+
+The features of this game can currently be divided into the following five types :
+
+1. Enemies : The enemy images will change every five levels, and the enemy's health and attack power will increase as the level progresses. In every fifth level, such as the fifth, tenth, and fifteenth levels, a BOSS will appear. The three BOSSes have different attack modes, and the difficulty also increases with the level.
+2. Player status (Upgrade Store) : There is an upgrade mall built into the main menu, which can currently enhance the player's maximum health, bullet speed, and attack power. To upgrade, you need to spend the corresponding coins. Coins can be obtained by killing enemies.
+3. Level : The level operation mechanism is based on the number of points obtained. The points formula is calculated as 75 + (level * 10) * 5. When the specified points are reached, you will enter the next level.
+4. Item : When the player kills an enemy, he will currently receive two props, one is a prop that increases health, and the other is a prop that allows the player to gain a shield within a certain period of time.
+5. Animation : For example, the explosion animation of the enemy, the flashing animation when the player is hit, the animation when the bullet is shot, etc.
 
 # Image Source
 

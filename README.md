@@ -40,6 +40,8 @@ Enemy 4 Series : https://free-game-assets.itch.io/free-enemy-spaceship-2d-sprite
 
 Items : https://foozlecc.itch.io/void-pickups-pack
 
+Background Music : https://opengameart.org/content/space-shooter-music
+
 # About Author
 
 This game is made by LukeTseng, a high school stduent. Although there are still some flaws in the code, please forgive me :) 

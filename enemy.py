@@ -50,7 +50,7 @@ class Enemy_1(Enemy):
         super().__init__('img/enemy/lv1_to_5/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv1_to_5/Shield/Scout_assets/Scout_Shield_frame_', (39.4, 42.8), (37.4, 40.8), 2, enemy_hp["enemies_1"], 14)
     
     def update(self, pressed_keys=None, mouse_pos=None):
-        super().update(EnemyBullet_1, 0.01)
+        super().update(EnemyBullet_1, 0.002)
 
 class Enemy_2(Enemy):
     def __init__(self):
@@ -180,7 +180,7 @@ class Enemy_9(Enemy):
        super().__init__('img/enemy/lv6_to_10/base/Battlecruiser_assets/Battlecruiser_frame_1.png', 'img/enemy/lv6_to_10/Shield/Battlecruiser_assets/Battlecruiser_frame_', None, None, 0, enemy_hp["enemies_10"], 9)
 
     def update(self, pressed_keys=None, mouse_pos=None):
-        super().update(EnemyBullet_7, 0.03)
+        super().update(EnemyBullet_7, 0.003)
 
 class Enemy_10(Enemy):
     def __init__(self):
@@ -194,18 +194,18 @@ class Enemy_11(Enemy):
        super().__init__('img/enemy/lv11_to_15/base/Bomber_assets/Bomber_frame_1.png', 'img/enemy/lv11_to_15/Shields/Bomber_assets/Bomber_frame_', None, None, 2, enemy_hp["enemies_13"], 11)
 
     def update(self, pressed_keys=None, mouse_pos=None):
-        super().update(EnemyBullet_11, 0.0015)
+        super().update(EnemyBullet_11, 0.003)
 
 class Enemy_12(Enemy):
     def __init__(self):
        super().__init__('img/enemy/lv11_to_15/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv11_to_15/Shields/Torpedo_assets/Torpedo_frame_', None, None, 1, enemy_hp["enemies_14"], 9)
 
     def update(self, pressed_keys=None, mouse_pos=None):
-        super().update(EnemyBullet_12, 0.0015)
+        super().update(EnemyBullet_12, 0.003)
 
 class Enemy_13(Enemy):
     def __init__(self):
-       super().__init__('img/enemy/lv11_to_15/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv11_to_15/Shields/Frigate_assets/Frigate_frame_', None, None, 3, enemy_hp["enemies_15"], 11)
+       super().__init__('img/enemy/lv11_to_15/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv11_to_15/Shields/Frigate_assets/Frigate_frame_', None, None, 4, enemy_hp["enemies_15"], 11)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_10, 0.003)

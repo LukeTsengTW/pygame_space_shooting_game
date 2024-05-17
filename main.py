@@ -30,7 +30,11 @@ pygame.display.set_caption('Space Shooter - Pygame Edition v1.0 - By: @LukeTseng
 font = pygame.font.Font('font.ttf', 36)
 clock = pygame.time.Clock()
 
+hard_level = 1
 level = 1
+
+is_complete_game = False
+
 backgrounds = [pygame.image.load(f'img/background/lv{i}_background.jpg') for i in range(1, 21)]
 background = backgrounds[0]
 background_bottom = backgrounds[0]
@@ -71,27 +75,53 @@ def reset_continue_game():
 
 current_text = 0 
 def setting():
-    global current_text
+    global current_text, volume_level
     setting_running = True
     text_options = ['Control the sprite with keyboard', 'Control the sprite with cursor']
 
+    button_width = 200
+    button_height = 50
+    button_1 = pygame.Rect((SCREEN_WIDTH - 550) // 2, (SCREEN_HEIGHT - button_height) // 2 - 180, 550, button_height)
+    button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 + 60, button_width, button_height)
+
+    background = pygame.image.load(f'img/background/setting_background.jpg')
+    background_bottom = background
+    background_rect = background.get_rect()
+    background_rect_bottom = background_bottom.get_rect()
+    background_rect_bottom.top = background_rect.bottom
+
     while setting_running:
-        screen.fill((0,0,0))
+        background_rect.move_ip(0, 2)
+        background_rect_bottom.move_ip(0, 2)
+        if background_rect.top >= SCREEN_HEIGHT:
+            background_rect.bottom = background_rect_bottom.top
+        if background_rect_bottom.top >= SCREEN_HEIGHT:
+            background_rect_bottom.bottom = background_rect.top
+
+        screen.blit(background, background_rect)
+        screen.blit(background_bottom, background_rect_bottom)
+
         draw_text('Setting', font, (255, 255, 255), screen, SCREEN_WIDTH/2, 150)
 
         mx, my = pygame.mouse.get_pos()
-
-        button_width = 200
-        button_height = 50
-        button_1 = pygame.Rect((SCREEN_WIDTH - 550) // 2, (SCREEN_HEIGHT - button_height) // 2 - 180, 550, button_height)
-        button_2 = pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 60, button_width, button_height)
         
         pygame.draw.rect(screen, (0, 200, 0), button_1)
         pygame.draw.rect(screen, (200, 0, 0), button_2)
 
         text = text_options[current_text]
         draw_text(text , font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 180)
-        draw_text('Back menu', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 60)
+        draw_text('Back menu', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 60)
+
+        # Add a slider for volume control
+        slider_rect = pygame.Rect((SCREEN_WIDTH - 300) // 2, SCREEN_HEIGHT // 2 - 60, 300, 20)
+        slider_button_rect = pygame.Rect((SCREEN_WIDTH - 300) // 2 + 270 * volume_level, SCREEN_HEIGHT // 2 - 60, 30, 20)
+        pygame.draw.rect(screen, (100, 100, 100), slider_rect)
+        pygame.draw.rect(screen, (0, 255, 0), slider_button_rect)
+
+        volume_percentage = f"{int(volume_level * 101)}%"
+        draw_text(volume_percentage, font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 10)
+
+        draw_text('Volume', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 90)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -101,6 +131,10 @@ def setting():
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN or (event.type == pygame.MOUSEMOTION and event.buttons[0] == 1):
+                if slider_rect.collidepoint((mx, my)):
+                    volume_level = (mx - slider_rect.x) / slider_rect.width
+                    pygame.mixer.music.set_volume(volume_level)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if button_1.collidepoint((mx, my)):
@@ -118,8 +152,24 @@ def setting():
 def upgrade_UI():
     global BULLET_SPEED, max_lives, damage_level, bullet_speed_level, live_level, damage_level_need_coin, bullet_speed_level_need_coin, live_level_need_coin
     upgrade_UI_running = True
+
+    background = pygame.image.load(f'img/background/upgrade_background.jpg')
+    background_bottom = background
+    background_rect = background.get_rect()
+    background_rect_bottom = background_bottom.get_rect()
+    background_rect_bottom.top = background_rect.bottom
+
     while upgrade_UI_running:
-        screen.fill((0,0,0))
+        background_rect.move_ip(0, 2)
+        background_rect_bottom.move_ip(0, 2)
+        if background_rect.top >= SCREEN_HEIGHT:
+            background_rect.bottom = background_rect_bottom.top
+        if background_rect_bottom.top >= SCREEN_HEIGHT:
+            background_rect_bottom.bottom = background_rect.top
+
+        screen.blit(background, background_rect)
+        screen.blit(background_bottom, background_rect_bottom)
+
         draw_text('Upgrade Menu', font, (255, 255, 255), screen, SCREEN_WIDTH/2, 150)
 
         mx, my = pygame.mouse.get_pos()
@@ -253,6 +303,7 @@ def chose_level():
                     button = pygame.Rect((SCREEN_WIDTH - 200) // 2, 50 * i, 200, 40)
                     if button.collidepoint((mx, my)):
                         if i <= level:
+                            play_music("music/battle_in_the_stars.ogg")
                             level = i
                             chose_level_running = False
                             player.out_of_game = False
@@ -264,13 +315,56 @@ def chose_level():
         pygame.display.update()
         clock.tick(60)
 
+def chose_hard_level():
+    global hard_level
+    chose_hard_level_running = True
+    while chose_hard_level_running:
+        screen.fill((0, 0, 0))
+        button_back = pygame.Rect((SCREEN_WIDTH - 200) // 2, SCREEN_HEIGHT - 100, 200, 40)
+        pygame.draw.rect(screen, (100, 100, 100), button_back)
+        draw_text('Back', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT - 80)
+        if is_complete_game:
+            for i in range(1, 16):
+                if i <= hard_level:
+                    button_color = (0, 200, 0)  # Green for current level
+                else:
+                    button_color = (200, 0, 0)  # Red for locked levels
+                button = pygame.Rect((SCREEN_WIDTH - 200) // 2, 50 * i, 200, 40)
+                pygame.draw.rect(screen, button_color, button)
+                draw_text(f'Level {i}', font, (255, 255, 255), screen, SCREEN_WIDTH // 2, 50 * i + 20)
+        else:
+            draw_text("You still haven't completed", font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50)
+            draw_text("the normal level yet.", font, (255, 255, 255), screen, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                for i in range(1, 16):
+                    button = pygame.Rect((SCREEN_WIDTH - 200) // 2, 50 * i, 200, 40)
+                    if button.collidepoint((mx, my)):
+                        if i <= hard_level:
+                            hard_level = i
+                            chose_hard_level_running = False
+                            player.out_of_game = False
+                            reset_continue_game()
+                            break
+                if button_back.collidepoint((mx, my)):
+                    chose_hard_level_running = False
+                    main_menu()
+        pygame.display.update()
+        clock.tick(60)
+
 def main_menu():
+    play_music("music/brave_pilots_menu_screen.ogg")
     main_running = True
     button_width = 200
     button_height = 50
-    button_texts = ['Play', 'Upgrade', 'Setting', 'Exit', 'Credits']
-    button_colors = [(0, 200, 0), (200, 0, 200), (0, 200, 200), (200, 0, 0), (200, 200, 0)]
-    button_actions = [chose_level, upgrade_UI, setting, sys.exit, credits]
+    button_texts = ['Play', 'Upgrade', 'Setting', 'Exit', 'Credits', 'Hard Mode']
+    button_colors = [(0, 200, 0), (200, 0, 200), (0, 200, 200), (200, 0, 0), (200, 200, 0), (255, 0, 0)]
+    button_actions = [chose_level, upgrade_UI, setting, sys.exit, credits, chose_hard_level]
     buttons = [pygame.Rect((SCREEN_WIDTH - button_width) // 2, (SCREEN_HEIGHT - button_height) // 2 - 240 + i * 120, button_width, button_height) for i in range(len(button_texts))]
 
     background = pygame.image.load(f'img/background/menu_background.jpg')
@@ -331,6 +425,25 @@ def game_over_screen():
                 if event.key == pygame.K_2:
                     pygame.quit()
                     sys.exit()
+
+def all_levels_completed_screen():
+    all_levels_completed_running = True
+    player.out_of_game = True
+    while all_levels_completed_running:
+        screen.fill((0, 0, 0))
+        draw_text('Congratulations!', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
+        draw_text('All levels completed!', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        draw_text('You are unlock the hard mode now.', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50)
+        draw_text('Press 1 to return to main menu', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 100)
+        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type is pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    main_menu()
+                    all_levels_completed_running = False
 
 def pause_menu():
     pause_running = True
@@ -416,6 +529,8 @@ def stage_clear_screen(level, score):
                 mx, my = pygame.mouse.get_pos()
                 if button_next_level.collidepoint((mx, my)):
                     # Enter Next level
+                    if BOSS_GENERATION_ONCE["enemies_5"] or BOSS_GENERATION_ONCE["enemies_11"] or BOSS_GENERATION_ONCE["enemies_18"]:
+                        play_music('music/battle_in_the_stars.ogg')
                     player.out_of_game = False
                     return 'next'
                 if button_back_menu.collidepoint((mx, my)):
@@ -424,10 +539,14 @@ def stage_clear_screen(level, score):
                     return 'menu'
                 if level > 1 and button_previous_level.collidepoint((mx, my)):
                     # Return pervious level
+                    if BOSS_GENERATION_ONCE["enemies_5"] or BOSS_GENERATION_ONCE["enemies_11"] or BOSS_GENERATION_ONCE["enemies_18"]:
+                        play_music('music/battle_in_the_stars.ogg')
                     player.out_of_game = False
                     return 'previous'
                 if button_restart_level.collidepoint((mx, my)):
                     # Restart current level
+                    if BOSS_GENERATION_ONCE["enemies_5"] or BOSS_GENERATION_ONCE["enemies_11"] or BOSS_GENERATION_ONCE["enemies_18"]:
+                        play_music('music/battle_in_the_stars.ogg')
                     player.out_of_game = False
                     return 'restart'
 
@@ -472,25 +591,26 @@ def reset_enemies():
     BOSS_GENERATION_ONCE['enemies_11'] = False
     BOSS_GENERATION_ONCE['enemies_18'] = False
 
+last_spawn_time = 0
+
 def generate_enemy(level, enemy_type, enemy_class, boss=False, Is_support=False):
+    global last_spawn_time
     if boss:
         if not BOSS_GENERATION_ONCE[enemy_type]:
             boss = enemy_class()
             enemies_p[enemy_type].add(boss)
             all_sprites.add(boss)
             BOSS_GENERATION_ONCE[enemy_type] = True
+            play_music('music/death_match_boss_theme.ogg')
     else:
-        if not(Is_support):
-            if random.random() < ENEMY_GENERATION_THRESHOLDS[enemy_type]:
-                enemy = enemy_class()
-                enemies_p[enemy_type].add(enemy)
-                all_sprites.add(enemy)
+        current_time = pygame.time.get_ticks()
+        if current_time - last_spawn_time >= 10 and random.random() < ENEMY_GENERATION_THRESHOLDS[enemy_type]:
+            enemy = enemy_class(enemies) if Is_support else enemy_class()
+            enemies_p[enemy_type].add(enemy)
+            all_sprites.add(enemy)
+            if not Is_support:
                 enemies.add(enemy)
-        else:
-            if random.random() < ENEMY_GENERATION_THRESHOLDS[enemy_type]:
-                enemy = enemy_class(enemies)
-                enemies_p[enemy_type].add(enemy)
-                all_sprites.add(enemy)
+            last_spawn_time = current_time
 
 def draw_health_bar(boss, screen):
     max_health = boss.maxhp
@@ -543,11 +663,10 @@ while running:
                 generate_enemy(level, 'enemies_5', Boss_1, boss=True)
         elif level > 5 and level <= 10:
             generate_enemy(level, 'enemies_6', Enemy_5)
+            generate_enemy(level, 'enemies_7', Enemy_6)
             if level > 6:
-                generate_enemy(level, 'enemies_7', Enemy_6)
-            if level > 7:
                 generate_enemy(level, 'enemies_8', Enemy_7)
-            if level > 8:
+            if level > 7:
                 generate_enemy(level, 'enemies_9', Enemy_8, Is_support=True)
                 generate_enemy(level, 'enemies_10', Enemy_9)
             if level == 10:
@@ -557,9 +676,8 @@ while running:
             generate_enemy(level, 'enemies_13', Enemy_11)
             if level > 11:
                 generate_enemy(level, 'enemies_14', Enemy_12)
-            if level > 12:
                 generate_enemy(level, 'enemies_15', Enemy_13)
-            if level > 13:
+            if level > 12:
                 generate_enemy(level, 'enemies_16', Enemy_14, Is_support=True)
                 generate_enemy(level, 'enemies_17', Enemy_15) 
             if level == 15:
@@ -605,24 +723,24 @@ while running:
     for enemy_bullet in enemy_bullets:
         screen.blit(enemy_bullet.surf, enemy_bullet.rect)
     
-    check_bullet_hit(bullets, enemies_p['enemies_1'], 1, 0.3, 0.05, Explosion_1, 1)
-    check_bullet_hit(bullets, enemies_p['enemies_2'], 3, 0.06, 0.09, Explosion_2, 3)
-    check_bullet_hit(bullets, enemies_p['enemies_3'], 5, 0.09, 0.1, Explosion_3, 5)
-    check_bullet_hit(bullets, enemies_p['enemies_4'], 2, 0.02, 0.15, Explosion_4, 7)
-    check_bullet_hit(bullets, enemies_p['enemies_5'], 100, 0.3, 0.5, Explosion_5, 10000)
-    check_bullet_hit(bullets, enemies_p['enemies_6'], 2, 0.1, 0.1, Explosion_6, 3)
-    check_bullet_hit(bullets, enemies_p['enemies_7'], 4, 0.15, 0.1, Explosion_7, 5)
-    check_bullet_hit(bullets, enemies_p['enemies_8'], 6, 0.15, 0.1, Explosion_8, 7)
-    check_bullet_hit(bullets, enemies_p['enemies_9'], 3, 0.15, 0.1, Explosion_9, 9)
-    check_bullet_hit(bullets, enemies_p['enemies_10'], 10, 0.3, 0.3, Explosion_10, 11)
-    check_bullet_hit(bullets, enemies_p['enemies_11'], 400, 0.5, 0.5, Explosion_11, 50000)
-    check_bullet_hit(bullets, enemies_p['enemies_12'], 3, 0.15, 0.1, Explosion_12, 5)
-    check_bullet_hit(bullets, enemies_p['enemies_13'], 5, 0.15, 0.1, Explosion_13, 7)
-    check_bullet_hit(bullets, enemies_p['enemies_14'], 7, 0.2, 0.1, Explosion_14, 9)
-    check_bullet_hit(bullets, enemies_p['enemies_15'], 9, 0.25, 0.25, Explosion_15, 11)
-    check_bullet_hit(bullets, enemies_p['enemies_16'], 11, 0.25, 0.25, Explosion_16, 13)
-    check_bullet_hit(bullets, enemies_p['enemies_17'], 13, 0.35, 0.35, Explosion_17, 15)
-    check_bullet_hit(bullets, enemies_p['enemies_18'], 600, 0.6, 0.6, Explosion_18, 100000)
+    check_bullet_hit(bullets, enemies_p['enemies_1'], 1, 0.03, 0.01, Explosion_1, 1)
+    check_bullet_hit(bullets, enemies_p['enemies_2'], 3, 0.03, 0.01, Explosion_2, 3)
+    check_bullet_hit(bullets, enemies_p['enemies_3'], 5, 0.03, 0.01, Explosion_3, 5)
+    check_bullet_hit(bullets, enemies_p['enemies_4'], 2, 0.03, 0.01, Explosion_4, 7)
+    check_bullet_hit(bullets, enemies_p['enemies_5'], 100, 0.03, 0.01, Explosion_5, 10000)
+    check_bullet_hit(bullets, enemies_p['enemies_6'], 2, 0.03, 0.01, Explosion_6, 3)
+    check_bullet_hit(bullets, enemies_p['enemies_7'], 4, 0.03, 0.01, Explosion_7, 5)
+    check_bullet_hit(bullets, enemies_p['enemies_8'], 6, 0.03, 0.01, Explosion_8, 7)
+    check_bullet_hit(bullets, enemies_p['enemies_9'], 3, 0.03, 0.01, Explosion_9, 9)
+    check_bullet_hit(bullets, enemies_p['enemies_10'], 10, 0.03, 0.01, Explosion_10, 11)
+    check_bullet_hit(bullets, enemies_p['enemies_11'], 400, 0.03, 0.01, Explosion_11, 50000)
+    check_bullet_hit(bullets, enemies_p['enemies_12'], 3, 0.03, 0.01, Explosion_12, 5)
+    check_bullet_hit(bullets, enemies_p['enemies_13'], 5, 0.03, 0.01, Explosion_13, 7)
+    check_bullet_hit(bullets, enemies_p['enemies_14'], 7, 0.03, 0.01, Explosion_14, 9)
+    check_bullet_hit(bullets, enemies_p['enemies_15'], 9, 0.03, 0.01, Explosion_15, 11)
+    check_bullet_hit(bullets, enemies_p['enemies_16'], 11, 0.03, 0.01, Explosion_16, 13)
+    check_bullet_hit(bullets, enemies_p['enemies_17'], 13, 0.03, 0.01, Explosion_17, 15)
+    check_bullet_hit(bullets, enemies_p['enemies_18'], 600, 0.03, 0.01, Explosion_18, 100000)
 
     for item_type in items.keys():
         item_collision(player, item_type)
@@ -668,10 +786,14 @@ while running:
     if player.invincible_shield and pygame.time.get_ticks() - player.shield_start_time > 5000:
         player.invincible_shield = False
 
-    if player.lives <= 0 or level > 15:
+    if player.lives <= 0:
         game_over_screen()
     
-    if score > 75 + (level * 10) * 5: # 75 + (level * 10) * 5
+    if level > 15:
+        all_levels_completed_screen()
+        is_complete_game = True
+    
+    if score > 100 + (level * 10) * 9: # 100 + (level * 10) * 9
         action = stage_clear_screen(level, score)
         if action == 'next':
             reset_enemies()

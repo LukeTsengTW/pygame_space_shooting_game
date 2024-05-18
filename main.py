@@ -398,7 +398,7 @@ def main_menu():
                 if event.button == 1:
                     for idx, button in enumerate(buttons):
                         if button.collidepoint((mx, my)):
-                            if idx == 0:
+                            if idx == 0 or idx == 5:
                                 main_running = False
                             button_actions[idx]()
 
@@ -406,8 +406,10 @@ def main_menu():
         clock.tick(60)
 
 def game_over_screen():
+    play_music('music/defeated_game_over_tune.ogg')
     game_over_running = True
     player.out_of_game = True
+    pygame.mouse.set_visible(True)
     while game_over_running:
         screen.fill((0, 0, 0))
         draw_text('Game Over', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
@@ -427,8 +429,10 @@ def game_over_screen():
                     sys.exit()
 
 def all_levels_completed_screen():
+    play_music('music/victory_tune.ogg')
     all_levels_completed_running = True
     player.out_of_game = True
+    pygame.mouse.set_visible(True)
     while all_levels_completed_running:
         screen.fill((0, 0, 0))
         draw_text('Congratulations!', font, (255, 255, 255), screen, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100)
@@ -637,6 +641,81 @@ def draw_health_bar(boss, screen):
 def display_text(text, value, color, position):
     rendered_text = font.render('{}: {}'.format(text, value), True, color)
     screen.blit(rendered_text, position)
+
+def display_text_word_by_word(text, position, delay=70):
+    rendered_text = ''
+    text_sound_effect.play()
+    for word in text:
+        screen.fill((0, 0, 0)) 
+        rendered_text += word
+        text_surface = font.render(rendered_text, True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=position)
+        screen.blit(text_surface, text_rect.topleft)
+        pygame.display.update()
+        pygame.time.wait(delay)
+
+def display_opening_screen(texts, delay=500):
+    pygame.mixer.music.load('music/skyfire_title_screen.ogg')
+    pygame.mixer.music.play()
+    pygame.mixer.music.set_volume(0.3)
+    for text in texts:
+        screen.fill((0, 0, 0))
+        display_text_word_by_word(text, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+        text_sound_effect.stop()
+        pygame.time.wait(delay)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+    
+    text_sound_effect.stop()
+    
+    text = "Made by LukeTseng"
+    font_color = (255, 255, 255)
+    text_surface = font.render(text, True, font_color)
+    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+    
+    for alpha in range(0, 256, 10):
+        text_surface.set_alpha(alpha)
+        screen.fill((0, 0, 0))
+        screen.blit(text_surface, text_rect)
+        pygame.display.update()
+        pygame.time.wait(100)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+    
+    pygame.time.wait(3000)
+    
+    for alpha in range(255, -1, -10):
+        text_surface.set_alpha(alpha)
+        screen.fill((0, 0, 0))
+        screen.blit(text_surface, text_rect)
+        pygame.display.update()
+        pygame.time.wait(100)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+    pygame.time.wait(1000)
+
+texts = [
+    'Earthlings from parallel universes', 
+    'came to our current Earth.', 
+    'Now, they are invading', 
+    'and plundering our resources.', 
+    'Enter the battleship, warrior.', 
+    'We need your help and',
+    'we can provide you with',
+    'support and supplies',
+    'You are the only hope',
+    'for us people on earth.',
+    'Go, you will be a hero.',
+]
+
+display_opening_screen(texts)
 
 main_menu()
 

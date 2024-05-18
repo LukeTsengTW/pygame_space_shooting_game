@@ -46,22 +46,25 @@ class Enemy(pygame.sprite.Sprite):
             self.kill()
 
 class Enemy_1(Enemy):
-    def __init__(self):
-        super().__init__('img/enemy/lv1_to_5/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv1_to_5/Shield/Scout_assets/Scout_Shield_frame_', (39.4, 42.8), (37.4, 40.8), 2, enemy_hp["enemies_1"], 14)
+    def __init__(self, is_enter_hard_mode=False):
+        hp = enemy_hp["enemies_1"] * 20 if is_enter_hard_mode else enemy_hp["enemies_1"]
+        super().__init__('img/enemy/lv1_to_5/base/Scout_assets/Scout_frame_1.png', 'img/enemy/lv1_to_5/Shield/Scout_assets/Scout_Shield_frame_', (39.4, 42.8), (37.4, 40.8), 2, hp, 14)
     
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_1, 0.002)
 
 class Enemy_2(Enemy):
-    def __init__(self):
-        super().__init__('img/enemy/lv1_to_5/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv1_to_5/Shield/Torpedo_assets/Torpedo_frame_', None, None, 1, enemy_hp["enemies_2"], 11)
+    def __init__(self, is_enter_hard_mode=False):
+        hp = enemy_hp["enemies_2"] * 20 if is_enter_hard_mode else enemy_hp["enemies_2"]
+        super().__init__('img/enemy/lv1_to_5/base/Torpedo_assets/Torpedo_frame_1.png', 'img/enemy/lv1_to_5/Shield/Torpedo_assets/Torpedo_frame_', None, None, 1, hp, 11)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_2, 0.002)
 
 class Enemy_3(Enemy):
-    def __init__(self):
-       super().__init__('img/enemy/lv1_to_5/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv1_to_5/Shield/Frigate_assets/Frigate_Shield_frame_', None, None, 4, enemy_hp["enemies_3"], 39)
+    def __init__(self, is_enter_hard_mode=False):
+        hp = enemy_hp["enemies_3"] * 20 if is_enter_hard_mode else enemy_hp["enemies_3"]
+        super().__init__('img/enemy/lv1_to_5/base/Frigate_assets/Frigate_frame_1.png', 'img/enemy/lv1_to_5/Shield/Frigate_assets/Frigate_Shield_frame_', None, None, 4, hp, 39)
 
     def update(self, pressed_keys=None, mouse_pos=None):
         super().update(EnemyBullet_2, 0.000001)

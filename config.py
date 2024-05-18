@@ -1,10 +1,14 @@
 import pygame
 
+is_enter_hard_mode = False
+
 pygame.mixer.init()
 
 volume_level = 0.5
 
 pygame.mixer.music.set_volume(volume_level)
+
+text_sound_effect = pygame.mixer.Sound('sound_effect/text_sound_effect.mp3')
 
 def play_music(filename):
     pygame.mixer.music.load(filename)
@@ -37,7 +41,7 @@ BOSS_GENERATION_ONCE = {
     'enemies_18': False,
 }
 
-max_lives = 90
+max_lives = 5
 player_bullet_angle = [5, 0, -5]
 
 enemy_hp = {

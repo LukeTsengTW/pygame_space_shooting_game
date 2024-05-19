@@ -71,12 +71,13 @@ class Player(pygame.sprite.Sprite):
         elif self.rect.bottom >= SCREEN_HEIGHT:
             self.rect.bottom = SCREEN_HEIGHT
         
-        if pygame.time.get_ticks() - self.last_shot_time > 15: 
+        if pygame.time.get_ticks() - self.last_shot_time > 10: 
             for angle in player_bullet_angle:
                 bullet = Bullet(self)
                 bullet.velocity = pygame.math.Vector2(0, -BULLET_SPEED).rotate(angle) 
                 bullets.add(bullet)
                 all_sprites.add(bullet)
+
                 self.last_shot_time = pygame.time.get_ticks()
     
     def draw(self, screen):

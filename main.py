@@ -563,6 +563,7 @@ def check_bullet_hit(bullets, enemies, score_increment, drop_rate_1, drop_rate_2
             if not enemy.invincible:
                 enemy.hp -= player.damage
                 if enemy.hp <= 0:
+                    boom_sound_effect.play()
                     player.coin += gain_coin
                     enemies.remove(enemy)
                     explosion = Explosion(enemy.rect.center)
@@ -608,7 +609,7 @@ def generate_enemy(level, enemy_type, enemy_class, boss=False, Is_support=False)
             play_music('music/death_match_boss_theme.ogg')
     else:
         current_time = pygame.time.get_ticks()
-        if current_time - last_spawn_time >= 10 and random.random() < ENEMY_GENERATION_THRESHOLDS[enemy_type]:
+        if current_time - last_spawn_time >= 50 and random.random() < ENEMY_GENERATION_THRESHOLDS[enemy_type]:
             enemy = enemy_class(enemies) if Is_support else enemy_class()
             enemies_p[enemy_type].add(enemy)
             all_sprites.add(enemy)
@@ -802,24 +803,24 @@ while running:
     for enemy_bullet in enemy_bullets:
         screen.blit(enemy_bullet.surf, enemy_bullet.rect)
     
-    check_bullet_hit(bullets, enemies_p['enemies_1'], 1, 0.03, 0.01, Explosion_1, 1)
-    check_bullet_hit(bullets, enemies_p['enemies_2'], 3, 0.03, 0.01, Explosion_2, 3)
-    check_bullet_hit(bullets, enemies_p['enemies_3'], 5, 0.03, 0.01, Explosion_3, 5)
-    check_bullet_hit(bullets, enemies_p['enemies_4'], 2, 0.03, 0.01, Explosion_4, 7)
-    check_bullet_hit(bullets, enemies_p['enemies_5'], 100, 0.03, 0.01, Explosion_5, 10000)
-    check_bullet_hit(bullets, enemies_p['enemies_6'], 2, 0.03, 0.01, Explosion_6, 3)
-    check_bullet_hit(bullets, enemies_p['enemies_7'], 4, 0.03, 0.01, Explosion_7, 5)
-    check_bullet_hit(bullets, enemies_p['enemies_8'], 6, 0.03, 0.01, Explosion_8, 7)
-    check_bullet_hit(bullets, enemies_p['enemies_9'], 3, 0.03, 0.01, Explosion_9, 9)
-    check_bullet_hit(bullets, enemies_p['enemies_10'], 10, 0.03, 0.01, Explosion_10, 11)
-    check_bullet_hit(bullets, enemies_p['enemies_11'], 400, 0.03, 0.01, Explosion_11, 50000)
-    check_bullet_hit(bullets, enemies_p['enemies_12'], 3, 0.03, 0.01, Explosion_12, 5)
-    check_bullet_hit(bullets, enemies_p['enemies_13'], 5, 0.03, 0.01, Explosion_13, 7)
-    check_bullet_hit(bullets, enemies_p['enemies_14'], 7, 0.03, 0.01, Explosion_14, 9)
-    check_bullet_hit(bullets, enemies_p['enemies_15'], 9, 0.03, 0.01, Explosion_15, 11)
-    check_bullet_hit(bullets, enemies_p['enemies_16'], 11, 0.03, 0.01, Explosion_16, 13)
-    check_bullet_hit(bullets, enemies_p['enemies_17'], 13, 0.03, 0.01, Explosion_17, 15)
-    check_bullet_hit(bullets, enemies_p['enemies_18'], 600, 0.03, 0.01, Explosion_18, 100000)
+    check_bullet_hit(bullets, enemies_p['enemies_1'], 2, 0.03, 0.01, Explosion_1, 10)
+    check_bullet_hit(bullets, enemies_p['enemies_2'], 3, 0.03, 0.01, Explosion_2, 20)
+    check_bullet_hit(bullets, enemies_p['enemies_3'], 4, 0.03, 0.01, Explosion_3, 30)
+    check_bullet_hit(bullets, enemies_p['enemies_4'], 5, 0.03, 0.01, Explosion_4, 40)
+    check_bullet_hit(bullets, enemies_p['enemies_5'], 200, 0.03, 0.01, Explosion_5, 10000)
+    check_bullet_hit(bullets, enemies_p['enemies_6'], 6, 0.03, 0.01, Explosion_6, 50)
+    check_bullet_hit(bullets, enemies_p['enemies_7'], 7, 0.03, 0.01, Explosion_7, 60)
+    check_bullet_hit(bullets, enemies_p['enemies_8'], 8, 0.03, 0.01, Explosion_8, 70)
+    check_bullet_hit(bullets, enemies_p['enemies_9'], 9, 0.03, 0.01, Explosion_9, 80)
+    check_bullet_hit(bullets, enemies_p['enemies_10'], 10, 0.03, 0.01, Explosion_10, 90)
+    check_bullet_hit(bullets, enemies_p['enemies_11'], 600, 0.03, 0.01, Explosion_11, 50000)
+    check_bullet_hit(bullets, enemies_p['enemies_12'], 11, 0.03, 0.01, Explosion_12, 100)
+    check_bullet_hit(bullets, enemies_p['enemies_13'], 12, 0.03, 0.01, Explosion_13, 110)
+    check_bullet_hit(bullets, enemies_p['enemies_14'], 13, 0.03, 0.01, Explosion_14, 120)
+    check_bullet_hit(bullets, enemies_p['enemies_15'], 14, 0.03, 0.01, Explosion_15, 130)
+    check_bullet_hit(bullets, enemies_p['enemies_16'], 15, 0.03, 0.01, Explosion_16, 140)
+    check_bullet_hit(bullets, enemies_p['enemies_17'], 16, 0.03, 0.01, Explosion_17, 150)
+    check_bullet_hit(bullets, enemies_p['enemies_18'], 1000, 0.03, 0.01, Explosion_18, 100000)
 
     for item_type in items.keys():
         item_collision(player, item_type)

@@ -46,6 +46,8 @@ Laser Sound Efect : https://pixabay.com/sound-effects/search/laser/
 
 Enemy Explosion Sound Effect : https://pixabay.com/sound-effects/search/boom/
 
+Other Sound Effect : MyEdit
+
 # About Author
 
 This game is made by LukeTseng, a high school stduent. Although there are still some flaws in the code, please forgive me :) 

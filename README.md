@@ -48,6 +48,10 @@ Enemy Explosion Sound Effect : https://pixabay.com/sound-effects/search/boom/
 
 Other Sound Effect : MyEdit
 
+# Video
+
+<iframe width="560" height="315" src="https://www.youtube.com/watch?v=mKqw35v4tzM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
 # About Author
 
 This game is made by LukeTseng, a high school stduent. Although there are still some flaws in the code, please forgive me :) 

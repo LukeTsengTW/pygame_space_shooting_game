@@ -52,6 +52,8 @@ Other Sound Effect : MyEdit
 
 [![Watch Video](https://img.youtube.com/vi/mKqw35v4tzM/0.jpg)](https://www.youtube.com/watch?v=mKqw35v4tzM)
 
+Click Image to watch
+
 # About Author
 
 This game is made by LukeTseng, a high school stduent. Although there are still some flaws in the code, please forgive me :) 

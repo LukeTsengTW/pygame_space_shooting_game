@@ -50,7 +50,7 @@ Other Sound Effect : MyEdit
 
 # Video
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mKqw35v4tzM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+[![Watch Video](https://img.youtube.com/vi/mKqw35v4tzM/0.jpg)](https://www.youtube.com/watch?v=mKqw35v4tzM)
 
 # About Author
 

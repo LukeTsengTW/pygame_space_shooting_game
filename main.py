@@ -467,6 +467,43 @@ def upgrade_UI():
     back_button = pygame.Rect(180, 715, 240, 58)
     dragging_scrollbar = False
     drag_grab_dy = 0
+    modal_row = None
+    modal_selected_add = 0
+    modal_max_add = 0
+    modal_input_text = ""
+    modal_input_active = False
+    dragging_level_slider = False
+
+    def sync_modal_value(value):
+        nonlocal modal_selected_add, modal_input_text
+        modal_selected_add = upgrade_selection.clamp_addition(
+            value,
+            modal_max_add,
+        )
+        modal_input_text = str(modal_selected_add)
+
+    def open_upgrade_modal(row):
+        nonlocal modal_row, modal_max_add, modal_input_active
+        modal_row = row
+        modal_max_add = upgrade_selection.max_affordable_addition(
+            row["cost_base"],
+            row["level"],
+            player.coin,
+            row["level_offset"],
+        )
+        modal_input_active = True
+        sync_modal_value(modal_max_add)
+
+    def close_upgrade_modal():
+        nonlocal modal_row, modal_selected_add, modal_max_add
+        nonlocal modal_input_text, modal_input_active
+        nonlocal dragging_level_slider
+        modal_row = None
+        modal_selected_add = 0
+        modal_max_add = 0
+        modal_input_text = ""
+        modal_input_active = False
+        dragging_level_slider = False
 
     upgrade_background = ScrollingBackground(
         pygame.image.load('img/background/upgrade_background.jpg'),
@@ -507,9 +544,9 @@ def upgrade_UI():
                 screen,
                 button,
                 f'{row["label"]}  /  LV.{row["level"]}',
-                hovered=button.collidepoint((mx, my)) and affordable,
-                style='primary' if affordable else 'locked',
-                disabled=not affordable,
+                hovered=button.collidepoint((mx, my)),
+                style='primary' if affordable else 'secondary',
+                disabled=False,
                 subtitle=row["subtitle"],
             )
         screen.set_clip(previous_clip)
@@ -522,10 +559,83 @@ def upgrade_UI():
             hovered=back_button.collidepoint((mx, my)),
         )
 
+        modal_controls = None
+        modal_total_cost = 0
+        if modal_row is not None:
+            modal_total_cost = upgrade_selection.total_upgrade_cost(
+                modal_row["cost_base"],
+                modal_row["level"],
+                modal_selected_add,
+                modal_row["level_offset"],
+            )
+            modal_controls = draw_upgrade_level_modal(
+                screen,
+                modal_row["label"],
+                current_level=modal_row["level"],
+                selected_add=modal_selected_add,
+                max_add=modal_max_add,
+                total_cost=modal_total_cost,
+                input_text=modal_input_text,
+                input_active=modal_input_active,
+                mouse_pos=(mx, my),
+                confirm_enabled=(
+                    modal_selected_add > 0
+                    and modal_total_cost <= player.coin
+                ),
+            )
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if modal_row is not None and modal_controls is not None:
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if (
+                        modal_input_active
+                        and not modal_controls["input"].collidepoint(event.pos)
+                    ):
+                        modal_input_active = False
+                        sync_modal_value(modal_input_text)
+
+                    if modal_controls["cancel"].collidepoint(event.pos):
+                        close_upgrade_modal()
+                    elif modal_controls["confirm"].collidepoint(event.pos):
+                        if buy_upgrade_levels(
+                            modal_row["key"],
+                            modal_selected_add,
+                        ):
+                            close_upgrade_modal()
+                    elif modal_controls["minus"].collidepoint(event.pos):
+                        sync_modal_value(modal_selected_add - 1)
+                    elif modal_controls["plus"].collidepoint(event.pos):
+                        sync_modal_value(modal_selected_add + 1)
+                    elif (
+                        modal_controls["slider"].inflate(0, 30).collidepoint(event.pos)
+                        or modal_controls["slider_thumb"].collidepoint(event.pos)
+                    ):
+                        dragging_level_slider = True
+                        sync_modal_value(
+                            upgrade_selection.slider_value_from_x(
+                                event.pos[0],
+                                modal_controls["slider"].left,
+                                modal_controls["slider"].width,
+                                modal_max_add,
+                            )
+                        )
+                    elif modal_controls["input"].collidepoint(event.pos):
+                        modal_input_active = True
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    dragging_level_slider = False
+                elif event.type == pygame.MOUSEMOTION and dragging_level_slider:
+                    sync_modal_value(
+                        upgrade_selection.slider_value_from_x(
+                            event.pos[0],
+                            modal_controls["slider"].left,
+                            modal_controls["slider"].width,
+                            modal_max_add,
+                        )
+                    )
+                continue
             if event.type == pygame.MOUSEWHEEL:
                 scroll_offset = clamp(scroll_offset - event.y * 44, 0, max_scroll)
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -540,7 +650,7 @@ def upgrade_UI():
                     else:
                         for button, row in row_buttons:
                             if viewport_rect.collidepoint((mx, my)) and button.collidepoint((mx, my)):
-                                buy_upgrade_levels(row["key"], 1)
+                                open_upgrade_modal(row)
                                 break
                         if back_button.collidepoint((mx, my)):
                             upgrade_UI_running = False

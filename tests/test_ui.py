@@ -283,6 +283,49 @@ class TacticalUiRenderingTests(unittest.TestCase):
                 pygame.image.tostring(long_input.subsurface(sample), "RGBA"),
             )
 
+    def test_upgrade_level_modal_preserves_and_intersects_parent_clip(self):
+        surface = pygame.Surface((600, 900), pygame.SRCALPHA)
+        before = surface.copy()
+        input_rect = upgrade_level_modal_rects(600, 900)["input"]
+        parent_clip = pygame.Rect(
+            input_rect.centerx - 10,
+            input_rect.top + 8,
+            20,
+            input_rect.height - 16,
+        )
+        surface.set_clip(parent_clip)
+
+        draw_upgrade_level_modal(
+            surface,
+            "WEAPON DAMAGE",
+            current_level=3,
+            selected_add=9,
+            max_add=9,
+            total_cost=66_651,
+            input_text="1234567890" * 8,
+            input_active=True,
+            mouse_pos=(0, 0),
+            confirm_enabled=True,
+        )
+
+        self.assertEqual(surface.get_clip(), parent_clip)
+        outside_regions = (
+            pygame.Rect(0, 0, 600, parent_clip.top),
+            pygame.Rect(0, parent_clip.bottom, 600, 900 - parent_clip.bottom),
+            pygame.Rect(0, parent_clip.top, parent_clip.left, parent_clip.height),
+            pygame.Rect(
+                parent_clip.right,
+                parent_clip.top,
+                600 - parent_clip.right,
+                parent_clip.height,
+            ),
+        )
+        for region in outside_regions:
+            self.assertEqual(
+                pygame.image.tostring(before.subsurface(region), "RGBA"),
+                pygame.image.tostring(surface.subsurface(region), "RGBA"),
+            )
+
     def test_upgrade_level_modal_disables_controls_at_zero(self):
         zero_surface = pygame.Surface((600, 900), pygame.SRCALPHA)
         enabled_surface = pygame.Surface((600, 900), pygame.SRCALPHA)

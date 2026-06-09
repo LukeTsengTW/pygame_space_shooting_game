@@ -417,7 +417,8 @@ def draw_upgrade_level_modal(
     )
     shown_input = input_text if input_active else f"+{selected_add}"
     previous_clip = surface.get_clip()
-    surface.set_clip(controls["input"].inflate(-12, -8))
+    input_inner_rect = controls["input"].inflate(-12, -8)
+    surface.set_clip(previous_clip.clip(input_inner_rect))
     try:
         draw_text(
             surface,

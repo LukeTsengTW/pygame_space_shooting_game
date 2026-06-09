@@ -5,6 +5,7 @@ from itertools import chain
 
 import save_manager
 import support_upgrades
+import upgrade_selection
 import config
 import hard_mode
 from background import ScrollingBackground
@@ -37,6 +38,7 @@ from ui import (
     draw_stat_card,
     draw_tactical_starfield,
     draw_text as draw_ui_text,
+    draw_upgrade_level_modal,
     level_grid_rects,
 )
 
@@ -343,6 +345,8 @@ def get_upgrade_rows():
             "label": "WEAPON DAMAGE",
             "level": damage_level,
             "cost": damage_level_need_coin,
+            "cost_base": 1234,
+            "level_offset": 0,
             "subtitle": f"COST {damage_level_need_coin:,} COINS\nCURRENT DMG {player.damage}  /  +1 DAMAGE",
         },
         {
@@ -350,6 +354,8 @@ def get_upgrade_rows():
             "label": "PROJECTILE SPEED",
             "level": bullet_speed_level,
             "cost": bullet_speed_level_need_coin,
+            "cost_base": 321,
+            "level_offset": 0,
             "subtitle": f"COST {bullet_speed_level_need_coin:,} COINS\nCURRENT SPD {BULLET_SPEED}  /  +1 SPEED",
         },
         {
@@ -357,6 +363,8 @@ def get_upgrade_rows():
             "label": "HULL CAPACITY",
             "level": live_level,
             "cost": live_level_need_coin,
+            "cost_base": 5432,
+            "level_offset": 0,
             "subtitle": f"COST {live_level_need_coin:,} COINS  /  +1 LIFE",
         },
         {
@@ -364,6 +372,8 @@ def get_upgrade_rows():
             "label": "SENTRY GUN",
             "level": sentry_gun_level,
             "cost": sentry_cost,
+            "cost_base": support_upgrades.SENTRY_GUN_BASE_COST,
+            "level_offset": 1,
             "subtitle": (
                 f"COST {sentry_cost:,} COINS\n"
                 f"{sentry_stats['count']} UNIT  {sentry_stats['lives']} LIVES  "
@@ -376,6 +386,8 @@ def get_upgrade_rows():
             "label": "TACTICAL SUPPORT",
             "level": tactical_support_level,
             "cost": tactical_cost,
+            "cost_base": support_upgrades.TACTICAL_SUPPORT_BASE_COST,
+            "level_offset": 1,
             "subtitle": (
                 f"COST {tactical_cost:,} COINS  /  "
                 f"HP <= {round(tactical_stats['trigger_ratio'] * 100)}%  CD {tactical_stats['cooldown_ms'] // 1000}s"
@@ -398,36 +410,49 @@ def draw_vertical_scrollbar(surface, track_rect, scroll_offset, max_scroll):
     return thumb_rect
 
 
-def buy_upgrade(upgrade_key):
+def buy_upgrade_levels(upgrade_key, add_levels):
     global BULLET_SPEED, max_lives
     global damage_level, bullet_speed_level, live_level
     global damage_level_need_coin, bullet_speed_level_need_coin, live_level_need_coin
     global sentry_gun_level, tactical_support_level
 
-    rows = {row["key"]: row for row in get_upgrade_rows()}
-    row = rows[upgrade_key]
-    if player.coin < row["cost"]:
+    add_levels = upgrade_selection.clamp_addition(add_levels, add_levels)
+    if add_levels <= 0:
         return False
 
-    player.coin -= row["cost"]
+    rows = {row["key"]: row for row in get_upgrade_rows()}
+    row = rows.get(upgrade_key)
+    if row is None:
+        return False
+
+    total_cost = upgrade_selection.total_upgrade_cost(
+        row["cost_base"],
+        row["level"],
+        add_levels,
+        row["level_offset"],
+    )
+    if player.coin < total_cost:
+        return False
+
+    player.coin -= total_cost
     if upgrade_key == "damage":
-        player.damage += 1
-        damage_level += 1
-        damage_level_need_coin = damage_level * 1234
+        player.damage += add_levels
+        damage_level += add_levels
+        damage_level_need_coin = damage_level * row["cost_base"]
     elif upgrade_key == "bullet_speed":
-        BULLET_SPEED += 1
-        bullet_speed_level += 1
-        bullet_speed_level_need_coin = bullet_speed_level * 321
+        BULLET_SPEED += add_levels
+        bullet_speed_level += add_levels
+        bullet_speed_level_need_coin = bullet_speed_level * row["cost_base"]
     elif upgrade_key == "lives":
-        max_lives += 1
-        live_level += 1
-        live_level_need_coin = live_level * 5432
+        max_lives += add_levels
+        live_level += add_levels
+        live_level_need_coin = live_level * row["cost_base"]
     elif upgrade_key == "sentry":
-        sentry_gun_level += 1
+        sentry_gun_level += add_levels
         if not player.out_of_game:
             spawn_sentry_guns()
     elif upgrade_key == "tactical":
-        tactical_support_level += 1
+        tactical_support_level += add_levels
 
     autosave()
     return True
@@ -515,7 +540,7 @@ def upgrade_UI():
                     else:
                         for button, row in row_buttons:
                             if viewport_rect.collidepoint((mx, my)) and button.collidepoint((mx, my)):
-                                buy_upgrade(row["key"])
+                                buy_upgrade_levels(row["key"], 1)
                                 break
                         if back_button.collidepoint((mx, my)):
                             upgrade_UI_running = False

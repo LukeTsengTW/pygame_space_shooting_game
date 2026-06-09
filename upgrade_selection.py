@@ -82,7 +82,7 @@ def slider_x_from_value(value, track_left, track_width, max_add):
         return 0
 
     if max_add == 0:
-        return track_left
+        return round(track_left)
 
     value = clamp_addition(value, max_add)
-    return track_left + track_width * value / max_add
+    return round(track_left + track_width * value / max_add)

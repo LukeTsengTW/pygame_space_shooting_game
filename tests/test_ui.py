@@ -19,8 +19,10 @@ from ui import (
     draw_panel,
     draw_slider,
     draw_tactical_starfield,
+    draw_upgrade_level_modal,
     gameplay_hud_rects,
     level_grid_rects,
+    upgrade_level_modal_rects,
 )
 from config import GAMEPLAY_TOP, HUD_HEIGHT
 
@@ -52,6 +54,20 @@ class TacticalUiGeometryTests(unittest.TestCase):
         self.assertGreater(boss_rect.top, hud_bottom)
         self.assertGreaterEqual(boss_rect.top, HUD_HEIGHT)
         self.assertLessEqual(boss_rect.bottom, GAMEPLAY_TOP)
+
+    def test_upgrade_level_modal_controls_are_in_bounds_and_separated(self):
+        rects = upgrade_level_modal_rects(600, 900)
+        screen_rect = pygame.Rect(0, 0, 600, 900)
+
+        self.assertTrue(screen_rect.contains(rects["modal"]))
+        for name, rect in rects.items():
+            if name != "modal":
+                self.assertTrue(rects["modal"].contains(rect), name)
+
+        self.assertFalse(rects["minus"].colliderect(rects["slider"]))
+        self.assertFalse(rects["slider"].colliderect(rects["plus"]))
+        self.assertFalse(rects["cancel"].colliderect(rects["confirm"]))
+        self.assertFalse(rects["current"].colliderect(rects["projected"]))
 
 
 class TacticalUiRenderingTests(unittest.TestCase):
@@ -184,6 +200,57 @@ class TacticalUiRenderingTests(unittest.TestCase):
 
         self.assertTrue(pygame.Rect(0, 0, 600, 900).contains(rect))
         self.assertNotEqual(self.surface.get_at(rect.center), pygame.Color(0, 0, 0, 0))
+
+    def test_upgrade_level_modal_renders_approved_controls(self):
+        controls = draw_upgrade_level_modal(
+            self.surface,
+            "WEAPON DAMAGE",
+            current_level=3,
+            selected_add=9,
+            max_add=9,
+            total_cost=66_651,
+            input_text="9",
+            input_active=True,
+            mouse_pos=(0, 0),
+        )
+
+        self.assertEqual(
+            set(controls),
+            {
+                "modal",
+                "current",
+                "projected",
+                "input",
+                "minus",
+                "slider",
+                "slider_thumb",
+                "plus",
+                "cost",
+                "cancel",
+                "confirm",
+            },
+        )
+        self.assertNotEqual(
+            self.surface.get_at(controls["modal"].center),
+            pygame.Color(0, 0, 0, 0),
+        )
+        self.assertEqual(controls["slider_thumb"].centerx, controls["slider"].right)
+
+    def test_upgrade_level_modal_disables_controls_at_zero(self):
+        controls = draw_upgrade_level_modal(
+            self.surface,
+            "SENTRY GUN",
+            current_level=0,
+            selected_add=0,
+            max_add=0,
+            total_cost=0,
+            input_text="0",
+            input_active=False,
+            mouse_pos=(0, 0),
+        )
+
+        self.assertEqual(controls["slider_thumb"].centerx, controls["slider"].left)
+        self.assertTrue(controls["modal"].contains(controls["confirm"]))
 
     def test_creator_card_has_visible_alpha_content(self):
         card = create_creator_card((440, 260))

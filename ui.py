@@ -339,6 +339,185 @@ def draw_modal_backdrop(surface, rect=None):
     return pygame.Rect(rect)
 
 
+def upgrade_level_modal_rects(screen_width, screen_height):
+    modal = pygame.Rect(92, 145, min(416, screen_width - 40), 610)
+    modal.centerx = screen_width // 2
+    modal.centery = screen_height // 2
+    return {
+        "modal": modal,
+        "current": pygame.Rect(modal.left + 28, modal.top + 92, 166, 68),
+        "projected": pygame.Rect(modal.left + 222, modal.top + 92, 166, 68),
+        "input": pygame.Rect(modal.centerx - 64, modal.top + 205, 128, 52),
+        "minus": pygame.Rect(modal.left + 28, modal.top + 302, 54, 54),
+        "slider": pygame.Rect(modal.left + 102, modal.top + 324, 212, 10),
+        "plus": pygame.Rect(modal.right - 82, modal.top + 302, 54, 54),
+        "cost": pygame.Rect(modal.left + 28, modal.top + 400, modal.width - 56, 72),
+        "cancel": pygame.Rect(modal.left + 28, modal.bottom - 82, 166, 54),
+        "confirm": pygame.Rect(modal.right - 194, modal.bottom - 82, 166, 54),
+    }
+
+
+def draw_upgrade_level_modal(
+    surface,
+    title,
+    *,
+    current_level,
+    selected_add,
+    max_add,
+    total_cost,
+    input_text,
+    input_active,
+    mouse_pos,
+):
+    from upgrade_selection import slider_x_from_value
+
+    controls = upgrade_level_modal_rects(surface.get_width(), surface.get_height())
+    modal = draw_modal_backdrop(surface, controls["modal"])
+    controls["modal"] = modal
+
+    draw_text(surface, title, 25, COLORS["text"], (modal.centerx, modal.top + 37))
+    pygame.draw.line(
+        surface,
+        COLORS["cyan"],
+        (modal.left + 82, modal.top + 66),
+        (modal.right - 82, modal.top + 66),
+        2,
+    )
+    draw_stat_card(
+        surface,
+        controls["current"],
+        "Current level",
+        f"LV. {current_level}",
+        accent=COLORS["cyan"],
+    )
+    draw_stat_card(
+        surface,
+        controls["projected"],
+        "After upgrade",
+        f"LV. {current_level + selected_add}",
+        accent=COLORS["gold"],
+    )
+
+    draw_text(
+        surface,
+        "LEVELS TO ADD",
+        11,
+        COLORS["muted"],
+        (modal.centerx, controls["input"].top - 15),
+    )
+    input_border = COLORS["cyan_hover"] if input_active else COLORS["border"]
+    draw_panel(
+        surface,
+        controls["input"],
+        fill=COLORS["navy"],
+        border=input_border,
+        alpha=248,
+        cut=6,
+    )
+    shown_input = input_text if input_active else f"+{selected_add}"
+    draw_text(surface, shown_input or "0", 23, COLORS["text"], controls["input"].center)
+
+    draw_button(
+        surface,
+        controls["minus"],
+        "-",
+        hovered=controls["minus"].collidepoint(mouse_pos) and selected_add > 0,
+        disabled=selected_add <= 0,
+    )
+    draw_button(
+        surface,
+        controls["plus"],
+        "+",
+        hovered=controls["plus"].collidepoint(mouse_pos) and selected_add < max_add,
+        style="primary",
+        disabled=selected_add >= max_add,
+    )
+
+    slider = controls["slider"]
+    pygame.draw.rect(
+        surface,
+        COLORS["track"],
+        slider,
+        border_radius=slider.height // 2,
+    )
+    thumb_x = slider_x_from_value(
+        selected_add,
+        slider.left,
+        slider.width,
+        max_add,
+    )
+    if thumb_x > slider.left:
+        fill = slider.copy()
+        fill.width = thumb_x - slider.left
+        pygame.draw.rect(
+            surface,
+            COLORS["cyan"],
+            fill,
+            border_radius=slider.height // 2,
+        )
+    thumb = pygame.Rect(0, 0, 28, 28)
+    thumb.center = (thumb_x, slider.centery)
+    pygame.draw.circle(surface, COLORS["panel"], thumb.center, 14)
+    pygame.draw.circle(surface, COLORS["cyan_hover"], thumb.center, 14, 4)
+    controls["slider_thumb"] = thumb
+    draw_text(
+        surface,
+        "+0",
+        11,
+        COLORS["muted"],
+        (slider.left, slider.bottom + 18),
+        anchor="midleft",
+    )
+    draw_text(
+        surface,
+        f"MAX +{max_add}",
+        11,
+        COLORS["muted"],
+        (slider.right, slider.bottom + 18),
+        anchor="midright",
+    )
+
+    draw_panel(
+        surface,
+        controls["cost"],
+        fill=COLORS["navy"],
+        border=COLORS["border"],
+        alpha=248,
+        cut=7,
+        border_width=1,
+    )
+    draw_text(
+        surface,
+        "TOTAL UPGRADE COST",
+        10,
+        COLORS["muted"],
+        (controls["cost"].centerx, controls["cost"].top + 20),
+    )
+    draw_text(
+        surface,
+        f"{total_cost:,} COINS",
+        22,
+        COLORS["gold"],
+        (controls["cost"].centerx, controls["cost"].bottom - 22),
+    )
+
+    draw_button(
+        surface,
+        controls["cancel"],
+        "CANCEL",
+        hovered=controls["cancel"].collidepoint(mouse_pos),
+    )
+    draw_button(
+        surface,
+        controls["confirm"],
+        "CONFIRM",
+        hovered=controls["confirm"].collidepoint(mouse_pos) and selected_add > 0,
+        style="primary",
+        disabled=selected_add <= 0,
+    )
+    return controls
+
+
 def draw_tactical_starfield(surface, tick):
     surface.fill(COLORS["navy"])
     width, height = surface.get_size()

@@ -212,6 +212,7 @@ class TacticalUiRenderingTests(unittest.TestCase):
             input_text="9",
             input_active=True,
             mouse_pos=(0, 0),
+            confirm_enabled=True,
         )
 
         self.assertEqual(
@@ -236,9 +237,58 @@ class TacticalUiRenderingTests(unittest.TestCase):
         )
         self.assertEqual(controls["slider_thumb"].centerx, controls["slider"].right)
 
+    def test_upgrade_level_modal_clips_long_active_input_text(self):
+        baseline = pygame.Surface((600, 900), pygame.SRCALPHA)
+        long_input = pygame.Surface((600, 900), pygame.SRCALPHA)
+        common = {
+            "current_level": 3,
+            "selected_add": 9,
+            "max_add": 9,
+            "total_cost": 66_651,
+            "input_active": True,
+            "mouse_pos": (0, 0),
+            "confirm_enabled": True,
+        }
+
+        baseline_controls = draw_upgrade_level_modal(
+            baseline,
+            "WEAPON DAMAGE",
+            input_text="",
+            **common,
+        )
+        long_controls = draw_upgrade_level_modal(
+            long_input,
+            "WEAPON DAMAGE",
+            input_text="1234567890" * 8,
+            **common,
+        )
+
+        input_rect = long_controls["input"]
+        self.assertEqual(input_rect, baseline_controls["input"])
+        left_sample = pygame.Rect(
+            input_rect.left - 100,
+            input_rect.top,
+            100,
+            input_rect.height,
+        )
+        right_sample = pygame.Rect(
+            input_rect.right,
+            input_rect.top,
+            100,
+            input_rect.height,
+        )
+        for sample in (left_sample, right_sample):
+            self.assertEqual(
+                pygame.image.tostring(baseline.subsurface(sample), "RGBA"),
+                pygame.image.tostring(long_input.subsurface(sample), "RGBA"),
+            )
+
     def test_upgrade_level_modal_disables_controls_at_zero(self):
-        controls = draw_upgrade_level_modal(
-            self.surface,
+        zero_surface = pygame.Surface((600, 900), pygame.SRCALPHA)
+        enabled_surface = pygame.Surface((600, 900), pygame.SRCALPHA)
+
+        zero_controls = draw_upgrade_level_modal(
+            zero_surface,
             "SENTRY GUN",
             current_level=0,
             selected_add=0,
@@ -247,10 +297,77 @@ class TacticalUiRenderingTests(unittest.TestCase):
             input_text="0",
             input_active=False,
             mouse_pos=(0, 0),
+            confirm_enabled=False,
+        )
+        enabled_controls = draw_upgrade_level_modal(
+            enabled_surface,
+            "SENTRY GUN",
+            current_level=0,
+            selected_add=1,
+            max_add=2,
+            total_cost=50_000,
+            input_text="1",
+            input_active=False,
+            mouse_pos=(0, 0),
+            confirm_enabled=True,
         )
 
-        self.assertEqual(controls["slider_thumb"].centerx, controls["slider"].left)
-        self.assertTrue(controls["modal"].contains(controls["confirm"]))
+        self.assertEqual(
+            zero_controls["slider_thumb"].centerx,
+            zero_controls["slider"].left,
+        )
+        self.assertTrue(zero_controls["modal"].contains(zero_controls["confirm"]))
+        for name in ("minus", "plus", "confirm"):
+            zero_sample = (zero_controls[name].left + 12, zero_controls[name].centery)
+            enabled_sample = (
+                enabled_controls[name].left + 12,
+                enabled_controls[name].centery,
+            )
+            self.assertNotEqual(
+                zero_surface.get_at(zero_sample)[:3],
+                enabled_surface.get_at(enabled_sample)[:3],
+            )
+
+    def test_upgrade_level_modal_honors_explicit_confirm_enabled_state(self):
+        disabled_surface = pygame.Surface((600, 900), pygame.SRCALPHA)
+        enabled_surface = pygame.Surface((600, 900), pygame.SRCALPHA)
+        disabled_controls = draw_upgrade_level_modal(
+            disabled_surface,
+            "SENTRY GUN",
+            current_level=0,
+            selected_add=1,
+            max_add=2,
+            total_cost=50_000,
+            input_text="1",
+            input_active=False,
+            mouse_pos=(0, 0),
+            confirm_enabled=False,
+        )
+        enabled_controls = draw_upgrade_level_modal(
+            enabled_surface,
+            "SENTRY GUN",
+            current_level=0,
+            selected_add=1,
+            max_add=2,
+            total_cost=50_000,
+            input_text="1",
+            input_active=False,
+            mouse_pos=(0, 0),
+            confirm_enabled=True,
+        )
+
+        disabled_sample = (
+            disabled_controls["confirm"].left + 12,
+            disabled_controls["confirm"].centery,
+        )
+        enabled_sample = (
+            enabled_controls["confirm"].left + 12,
+            enabled_controls["confirm"].centery,
+        )
+        self.assertNotEqual(
+            disabled_surface.get_at(disabled_sample)[:3],
+            enabled_surface.get_at(enabled_sample)[:3],
+        )
 
     def test_creator_card_has_visible_alpha_content(self):
         card = create_creator_card((440, 260))

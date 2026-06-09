@@ -368,6 +368,7 @@ def draw_upgrade_level_modal(
     input_text,
     input_active,
     mouse_pos,
+    confirm_enabled,
 ):
     from upgrade_selection import slider_x_from_value
 
@@ -415,7 +416,18 @@ def draw_upgrade_level_modal(
         cut=6,
     )
     shown_input = input_text if input_active else f"+{selected_add}"
-    draw_text(surface, shown_input or "0", 23, COLORS["text"], controls["input"].center)
+    previous_clip = surface.get_clip()
+    surface.set_clip(controls["input"].inflate(-12, -8))
+    try:
+        draw_text(
+            surface,
+            shown_input or "0",
+            23,
+            COLORS["text"],
+            controls["input"].center,
+        )
+    finally:
+        surface.set_clip(previous_clip)
 
     draw_button(
         surface,
@@ -511,9 +523,9 @@ def draw_upgrade_level_modal(
         surface,
         controls["confirm"],
         "CONFIRM",
-        hovered=controls["confirm"].collidepoint(mouse_pos) and selected_add > 0,
+        hovered=controls["confirm"].collidepoint(mouse_pos) and confirm_enabled,
         style="primary",
-        disabled=selected_add <= 0,
+        disabled=not confirm_enabled,
     )
     return controls
 

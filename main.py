@@ -472,15 +472,31 @@ def upgrade_UI():
     modal_max_add = 0
     modal_input_text = ""
     modal_input_active = False
+    modal_caret = 0
+    modal_select_all = False
     dragging_level_slider = False
 
     def sync_modal_value(value):
         nonlocal modal_selected_add, modal_input_text
+        nonlocal modal_caret, modal_select_all
         modal_selected_add = upgrade_selection.clamp_addition(
             value,
             modal_max_add,
         )
         modal_input_text = str(modal_selected_add)
+        modal_caret = len(modal_input_text)
+        modal_select_all = False
+
+    def update_modal_input_text(value, caret):
+        nonlocal modal_selected_add, modal_input_text
+        nonlocal modal_caret, modal_select_all
+        modal_input_text = value
+        modal_caret = clamp(caret, 0, len(modal_input_text))
+        modal_select_all = False
+        modal_selected_add = upgrade_selection.clamp_addition(
+            modal_input_text,
+            modal_max_add,
+        )
 
     def open_upgrade_modal(row):
         nonlocal modal_row, modal_max_add, modal_input_active
@@ -497,13 +513,53 @@ def upgrade_UI():
     def close_upgrade_modal():
         nonlocal modal_row, modal_selected_add, modal_max_add
         nonlocal modal_input_text, modal_input_active
+        nonlocal modal_caret, modal_select_all
         nonlocal dragging_level_slider
         modal_row = None
         modal_selected_add = 0
         modal_max_add = 0
         modal_input_text = ""
         modal_input_active = False
+        modal_caret = 0
+        modal_select_all = False
         dragging_level_slider = False
+
+    def confirm_modal_purchase():
+        nonlocal modal_row, modal_max_add
+        if modal_row is None:
+            return False
+
+        fresh_rows = {row["key"]: row for row in get_upgrade_rows()}
+        fresh_row = fresh_rows.get(modal_row["key"])
+        if fresh_row is None:
+            return False
+
+        fresh_max_add = upgrade_selection.max_affordable_addition(
+            fresh_row["cost_base"],
+            fresh_row["level"],
+            player.coin,
+            fresh_row["level_offset"],
+        )
+        modal_row = fresh_row
+        modal_max_add = fresh_max_add
+        if modal_selected_add > fresh_max_add:
+            sync_modal_value(fresh_max_add)
+            return False
+
+        sync_modal_value(modal_input_text)
+        total_cost = upgrade_selection.total_upgrade_cost(
+            fresh_row["cost_base"],
+            fresh_row["level"],
+            modal_selected_add,
+            fresh_row["level_offset"],
+        )
+        if modal_selected_add <= 0 or total_cost > player.coin:
+            return False
+
+        return buy_upgrade_levels(
+            fresh_row["key"],
+            modal_selected_add,
+        )
 
     upgrade_background = ScrollingBackground(
         pygame.image.load('img/background/upgrade_background.jpg'),
@@ -594,6 +650,59 @@ def upgrade_UI():
                     dragging_level_slider = False
                 if modal_row is None or modal_controls is None:
                     continue
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        close_upgrade_modal()
+                    elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                        if confirm_modal_purchase():
+                            close_upgrade_modal()
+                    elif modal_input_active:
+                        if event.key == pygame.K_a and event.mod & pygame.KMOD_CTRL:
+                            modal_select_all = True
+                            modal_caret = len(modal_input_text)
+                        elif event.key == pygame.K_HOME:
+                            modal_caret = 0
+                            modal_select_all = False
+                        elif event.key == pygame.K_END:
+                            modal_caret = len(modal_input_text)
+                            modal_select_all = False
+                        elif event.key == pygame.K_LEFT:
+                            modal_caret = max(0, modal_caret - 1)
+                            modal_select_all = False
+                        elif event.key == pygame.K_RIGHT:
+                            modal_caret = min(len(modal_input_text), modal_caret + 1)
+                            modal_select_all = False
+                        elif event.key in (pygame.K_BACKSPACE, pygame.K_DELETE):
+                            if modal_select_all:
+                                update_modal_input_text("", 0)
+                            elif event.key == pygame.K_BACKSPACE and modal_caret > 0:
+                                update_modal_input_text(
+                                    modal_input_text[:modal_caret - 1]
+                                    + modal_input_text[modal_caret:],
+                                    modal_caret - 1,
+                                )
+                            elif (
+                                event.key == pygame.K_DELETE
+                                and modal_caret < len(modal_input_text)
+                            ):
+                                update_modal_input_text(
+                                    modal_input_text[:modal_caret]
+                                    + modal_input_text[modal_caret + 1:],
+                                    modal_caret,
+                                )
+                        elif event.unicode and event.unicode.isdigit():
+                            if modal_select_all:
+                                updated_text = event.unicode
+                                updated_caret = len(event.unicode)
+                            else:
+                                updated_text = (
+                                    modal_input_text[:modal_caret]
+                                    + event.unicode
+                                    + modal_input_text[modal_caret:]
+                                )
+                                updated_caret = modal_caret + len(event.unicode)
+                            update_modal_input_text(updated_text, updated_caret)
+                    continue
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if (
                         modal_input_active
@@ -605,10 +714,7 @@ def upgrade_UI():
                     if modal_controls["cancel"].collidepoint(event.pos):
                         close_upgrade_modal()
                     elif modal_controls["confirm"].collidepoint(event.pos):
-                        if buy_upgrade_levels(
-                            modal_row["key"],
-                            modal_selected_add,
-                        ):
+                        if confirm_modal_purchase():
                             close_upgrade_modal()
                     elif modal_controls["minus"].collidepoint(event.pos):
                         sync_modal_value(modal_selected_add - 1)
@@ -632,6 +738,11 @@ def upgrade_UI():
                         )
                     elif modal_controls["input"].collidepoint(event.pos):
                         modal_input_active = True
+                        modal_caret = clamp(
+                            modal_caret,
+                            0,
+                            len(modal_input_text),
+                        )
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     dragging_level_slider = False
                 elif event.type == pygame.MOUSEMOTION and dragging_level_slider:

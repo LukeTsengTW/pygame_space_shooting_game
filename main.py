@@ -584,12 +584,15 @@ def upgrade_UI():
                 ),
             )
 
+        modal_event_barrier = modal_row is not None
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if modal_row is not None:
-                if modal_controls is None:
+            if modal_event_barrier or modal_row is not None:
+                if event.type == pygame.WINDOWFOCUSLOST:
+                    dragging_level_slider = False
+                if modal_row is None or modal_controls is None:
                     continue
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if (
@@ -612,8 +615,11 @@ def upgrade_UI():
                     elif modal_controls["plus"].collidepoint(event.pos):
                         sync_modal_value(modal_selected_add + 1)
                     elif (
-                        modal_controls["slider"].inflate(0, 30).collidepoint(event.pos)
-                        or modal_controls["slider_thumb"].collidepoint(event.pos)
+                        modal_max_add > 0
+                        and (
+                            modal_controls["slider"].inflate(0, 30).collidepoint(event.pos)
+                            or modal_controls["slider_thumb"].collidepoint(event.pos)
+                        )
                     ):
                         dragging_level_slider = True
                         sync_modal_value(
@@ -629,14 +635,17 @@ def upgrade_UI():
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     dragging_level_slider = False
                 elif event.type == pygame.MOUSEMOTION and dragging_level_slider:
-                    sync_modal_value(
-                        upgrade_selection.slider_value_from_x(
-                            event.pos[0],
-                            modal_controls["slider"].left,
-                            modal_controls["slider"].width,
-                            modal_max_add,
+                    if event.buttons[0]:
+                        sync_modal_value(
+                            upgrade_selection.slider_value_from_x(
+                                event.pos[0],
+                                modal_controls["slider"].left,
+                                modal_controls["slider"].width,
+                                modal_max_add,
+                            )
                         )
-                    )
+                    else:
+                        dragging_level_slider = False
                 continue
             if event.type == pygame.MOUSEWHEEL:
                 scroll_offset = clamp(scroll_offset - event.y * 44, 0, max_scroll)
@@ -646,15 +655,15 @@ def upgrade_UI():
                 if event.button == 5:
                     scroll_offset = clamp(scroll_offset + 44, 0, max_scroll)
                 if event.button == 1:
-                    if thumb_rect is not None and thumb_rect.collidepoint((mx, my)):
+                    if thumb_rect is not None and thumb_rect.collidepoint(event.pos):
                         dragging_scrollbar = True
-                        drag_grab_dy = my - thumb_rect.y
+                        drag_grab_dy = event.pos[1] - thumb_rect.y
                     else:
                         for button, row in row_buttons:
-                            if viewport_rect.collidepoint((mx, my)) and button.collidepoint((mx, my)):
+                            if viewport_rect.collidepoint(event.pos) and button.collidepoint(event.pos):
                                 open_upgrade_modal(row)
                                 break
-                        if back_button.collidepoint((mx, my)):
+                        if back_button.collidepoint(event.pos):
                             upgrade_UI_running = False
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:

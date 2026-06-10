@@ -588,7 +588,9 @@ def upgrade_UI():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if modal_row is not None and modal_controls is not None:
+            if modal_row is not None:
+                if modal_controls is None:
+                    continue
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if (
                         modal_input_active

@@ -529,6 +529,7 @@ def upgrade_UI():
         if modal_row is None:
             return False
 
+        requested_add = modal_selected_add
         fresh_rows = {row["key"]: row for row in get_upgrade_rows()}
         fresh_row = fresh_rows.get(modal_row["key"])
         if fresh_row is None:
@@ -542,11 +543,11 @@ def upgrade_UI():
         )
         modal_row = fresh_row
         modal_max_add = fresh_max_add
-        if modal_selected_add > fresh_max_add:
+        if requested_add > fresh_max_add:
             sync_modal_value(fresh_max_add)
             return False
 
-        sync_modal_value(modal_input_text)
+        sync_modal_value(requested_add)
         total_cost = upgrade_selection.total_upgrade_cost(
             fresh_row["cost_base"],
             fresh_row["level"],
@@ -690,7 +691,10 @@ def upgrade_UI():
                                     + modal_input_text[modal_caret + 1:],
                                     modal_caret,
                                 )
-                        elif event.unicode and event.unicode.isdigit():
+                        elif (
+                            event.unicode
+                            and event.unicode in "0123456789"
+                        ):
                             if modal_select_all:
                                 updated_text = event.unicode
                                 updated_caret = len(event.unicode)
@@ -738,6 +742,7 @@ def upgrade_UI():
                         )
                     elif modal_controls["input"].collidepoint(event.pos):
                         modal_input_active = True
+                        modal_select_all = False
                         modal_caret = clamp(
                             modal_caret,
                             0,

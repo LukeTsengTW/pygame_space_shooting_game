@@ -116,27 +116,24 @@ The features of this game can currently be divided into the following five types
 
 # Image Source
 
-Background : Leonardo.ai
+Background : ChatGPT Image Generation
 
-Space Main Ship : https://foozlecc.itch.io/void-main-ship
+The following assets are licensed under [CC0](https://creativecommons.org/publicdomain/zero/1.0/):
 
-Enemy 1 Series : https://foozlecc.itch.io/void-fleet-pack-1
+- Space Main Ship : https://foozlecc.itch.io/void-main-ship
+- Enemy 1 Series : https://foozlecc.itch.io/void-fleet-pack-1
+- Enemy 2 Series : https://foozlecc.itch.io/void-fleet-pack-2
+- Enemy 3 Series : https://foozlecc.itch.io/void-fleet-pack-3
+- Items : https://foozlecc.itch.io/void-pickups-pack
 
-Enemy 2 Series : https://foozlecc.itch.io/void-fleet-pack-2
+The following asset is licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/):
 
-Enemy 3 Series : https://foozlecc.itch.io/void-fleet-pack-3
+- Background Music : https://opengameart.org/content/space-shooter-music
 
-Enemy 4 Series : https://free-game-assets.itch.io/free-enemy-spaceship-2d-sprites-pixel-art
+The following sound effects are licensed under the [Pixabay Content License](https://pixabay.com/service/license-summary/):
 
-Items : https://foozlecc.itch.io/void-pickups-pack
-
-Background Music : https://opengameart.org/content/space-shooter-music
-
-Laser Sound Efect : https://pixabay.com/sound-effects/search/laser/
-
-Enemy Explosion Sound Effect : https://pixabay.com/sound-effects/search/boom/
-
-Other Sound Effect : MyEdit
+- Laser Sound Effect : https://pixabay.com/sound-effects/search/laser/
+- Enemy Explosion Sound Effect : https://pixabay.com/sound-effects/search/boom/
 
 # Video
 
@@ -154,4 +151,8 @@ The original intention of making this game is to realize my dream, a game develo
 
 This game is still undergoing modifications. You can use the code of this game and modify it, I don't mind.
 
-Made by LukeTseng ( 鼓山高中 _ 電腦社社長 ).
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+Made by LukeTseng.

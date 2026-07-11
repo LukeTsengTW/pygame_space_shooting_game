@@ -17,7 +17,7 @@ A feature-rich 2D vertical-scrolling space shooter built with Python and Pygame,
 
 ## Demo
 
-[![Gameplay demonstration](https://img.youtube.com/vi/mKqw35v4tzM/0.jpg)](https://www.youtube.com/watch?v=mKqw35v4tzM)
+[![Gameplay demonstration](docs/demo-gameplay.png)](https://www.youtube.com/watch?v=Aj5ZyInI8ho)
 
 Click the preview image above to watch the gameplay demonstration.
 

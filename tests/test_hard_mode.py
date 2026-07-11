@@ -37,7 +37,7 @@ def test_hard_start_delay_is_halved():
 def test_normal_mode_reward_scalers_apply_coin_multiplier():
     assert hard_mode.scale_clear_threshold(1000, False) == 1000
     assert hard_mode.scale_kill_score(2, False) == 2
-    assert hard_mode.scale_coin(20, False) == 60
+    assert hard_mode.scale_coin(20, False) == 260
 
 
 def test_hard_clear_threshold_is_doubled():
@@ -53,7 +53,7 @@ def test_hard_kill_score_is_1_5x_and_int():
 
 
 def test_hard_coin_includes_normal_and_hard_multipliers():
-    assert hard_mode.scale_coin(20, True) == 105
+    assert hard_mode.scale_coin(20, True) == 455
     result = hard_mode.scale_coin(30, True)
-    assert result == 158
+    assert result == 682
     assert isinstance(result, int)

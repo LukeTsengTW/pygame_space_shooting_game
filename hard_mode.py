@@ -9,6 +9,7 @@ HARD_START_DELAY_FACTOR = 0.5
 HARD_BOSS_COOLDOWN_FACTOR = 0.5
 HARD_CLEAR_THRESHOLD_MULTIPLIER = 2
 HARD_KILL_SCORE_MULTIPLIER = 1.5
+NORMAL_COIN_MULTIPLIER = 13
 HARD_COIN_MULTIPLIER = 1.75
 
 
@@ -41,4 +42,7 @@ def scale_kill_score(score, hard):
 
 
 def scale_coin(coin, hard):
-    return round(coin * HARD_COIN_MULTIPLIER) if hard else coin
+    multiplier = NORMAL_COIN_MULTIPLIER
+    if hard:
+        multiplier *= HARD_COIN_MULTIPLIER
+    return round(coin * multiplier)

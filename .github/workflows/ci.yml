@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python 3.12 on Windows
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    env:
+      SDL_VIDEODRIVER: dummy
+      SDL_AUDIODRIVER: dummy
+      PYGAME_HIDE_SUPPORT_PROMPT: "1"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pygame==2.6.1 pytest pillow
+
+      - name: Display environment information
+        run: |
+          python --version
+          python -m pip --version
+          python -c "import pygame; print(pygame.version.ver)"
+
+      - name: Compile-check entry point
+        run: python -m py_compile main.py
+
+      - name: Run pytest
+        run: python -m pytest -q
+
+      - name: Run unittest discovery
+        run: python -m unittest discover -s tests

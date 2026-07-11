@@ -1,5 +1,7 @@
 # Pygame Space Shooting Game
 
+[![CI](https://github.com/LukeTsengTW/pygame-space-shooting-game/actions/workflows/ci.yml/badge.svg)](https://github.com/LukeTsengTW/pygame-space-shooting-game/actions/workflows/ci.yml)
+
 A feature-rich 2D vertical-scrolling space shooter built with Python and Pygame, featuring 15 campaign levels, an unlockable hard mode, boss battles, persistent upgrades, configurable controls, automated tests, and standalone Windows builds.
 
 ## Highlights

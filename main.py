@@ -11,6 +11,7 @@ import config
 import hard_mode
 from background import ScrollingBackground
 from boss_health import BossHealthDisplayState
+from bullet_collision import bullet_hits_enemy
 from config import *
 from enemy import Enemy, Enemy_1, Enemy_2, Enemy_3, Enemy_4, Enemy_5, Enemy_6, Enemy_7, Enemy_8, Enemy_9, Enemy_10, Enemy_11, Enemy_12, Enemy_13, Enemy_14, Enemy_15, Boss_1, Boss_2, Boss_3
 from item import Item_1, Item_2
@@ -49,8 +50,8 @@ items = {
 }
 enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 19)}
 BOSS_GROUP_KEYS = ('enemies_5', 'enemies_11', 'enemies_18')
-CORE_DAMAGE_SPEED_CAP = 30
-HULL_CAPACITY_CAP = 5
+CORE_DAMAGE_SPEED_CAP = 5
+HULL_CAPACITY_CAP = 3
 
 level_start_time = 0
 
@@ -1362,7 +1363,7 @@ def stage_clear_screen(level, score):
 def check_bullet_hit(bullets, enemies, score_increment, drop_rate_1, drop_rate_2, Explosion, gain_coin=0):
     global score
     for bullet in bullets:
-        hit_enemies = pygame.sprite.spritecollide(bullet, enemies, False)
+        hit_enemies = pygame.sprite.spritecollide(bullet, enemies, False, bullet_hits_enemy)
         for enemy in hit_enemies:
             hit_spark = HitSpark(bullet.rect.center)
             all_sprites.add(hit_spark)

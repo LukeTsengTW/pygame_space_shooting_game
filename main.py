@@ -6,6 +6,7 @@ from itertools import chain
 import save_manager
 import support_upgrades
 import upgrade_selection
+import upgrade_scaling
 import config
 import hard_mode
 from background import ScrollingBackground
@@ -48,6 +49,8 @@ items = {
 }
 enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 19)}
 BOSS_GROUP_KEYS = ('enemies_5', 'enemies_11', 'enemies_18')
+CORE_DAMAGE_SPEED_CAP = 30
+HULL_CAPACITY_CAP = 5
 
 level_start_time = 0
 
@@ -151,7 +154,7 @@ def apply_save_state(data):
     global highest_unlocked_level, hard_level, is_complete_game
     global damage_level, bullet_speed_level, live_level, sentry_gun_level, tactical_support_level
     global damage_level_need_coin, bullet_speed_level_need_coin, live_level_need_coin
-    global max_lives, BULLET_SPEED, volume_level, opening_seen
+    global max_lives, volume_level, opening_seen
 
     progression = data["progression"]
     economy = data["economy"]
@@ -171,11 +174,13 @@ def apply_save_state(data):
     bullet_speed_level_need_coin = bullet_speed_level * 321
     live_level_need_coin = live_level * 5432
 
-    max_lives = 10 + live_level
-    BULLET_SPEED = 20 + bullet_speed_level
+    max_lives = 10 + upgrade_scaling.cumulative_bonus(live_level, HULL_CAPACITY_CAP)
+    config.BULLET_SPEED = 20 + upgrade_scaling.cumulative_bonus(
+        bullet_speed_level, CORE_DAMAGE_SPEED_CAP
+    )
 
     player.coin = economy["coin"]
-    player.damage = 50 + damage_level
+    player.damage = 50 + upgrade_scaling.cumulative_bonus(damage_level, CORE_DAMAGE_SPEED_CAP)
     player.lives = max_lives
     player.control = settings["control_mode"]
 
@@ -329,6 +334,9 @@ def clamp(value, minimum, maximum):
 
 
 def get_upgrade_rows():
+    damage_next = upgrade_scaling.next_increment(damage_level, CORE_DAMAGE_SPEED_CAP)
+    speed_next = upgrade_scaling.next_increment(bullet_speed_level, CORE_DAMAGE_SPEED_CAP)
+    lives_next = upgrade_scaling.next_increment(live_level, HULL_CAPACITY_CAP)
     sentry_cost = support_upgrades.next_upgrade_cost(
         support_upgrades.SENTRY_GUN_BASE_COST,
         sentry_gun_level,
@@ -347,7 +355,7 @@ def get_upgrade_rows():
             "cost": damage_level_need_coin,
             "cost_base": 1234,
             "level_offset": 0,
-            "subtitle": f"COST {damage_level_need_coin:,} COINS\nCURRENT DMG {player.damage}  /  +1 DAMAGE",
+            "subtitle": f"COST {damage_level_need_coin:,} COINS\nCURRENT DMG {player.damage}  /  +{damage_next} DAMAGE",
         },
         {
             "key": "bullet_speed",
@@ -356,7 +364,7 @@ def get_upgrade_rows():
             "cost": bullet_speed_level_need_coin,
             "cost_base": 321,
             "level_offset": 0,
-            "subtitle": f"COST {bullet_speed_level_need_coin:,} COINS\nCURRENT SPD {BULLET_SPEED}  /  +1 SPEED",
+            "subtitle": f"COST {bullet_speed_level_need_coin:,} COINS\nCURRENT SPD {config.BULLET_SPEED}  /  +{speed_next} SPEED",
         },
         {
             "key": "lives",
@@ -365,7 +373,7 @@ def get_upgrade_rows():
             "cost": live_level_need_coin,
             "cost_base": 5432,
             "level_offset": 0,
-            "subtitle": f"COST {live_level_need_coin:,} COINS  /  +1 LIFE",
+            "subtitle": f"COST {live_level_need_coin:,} COINS  /  +{lives_next} LIFE",
         },
         {
             "key": "sentry",
@@ -411,7 +419,7 @@ def draw_vertical_scrollbar(surface, track_rect, scroll_offset, max_scroll):
 
 
 def buy_upgrade_levels(upgrade_key, add_levels):
-    global BULLET_SPEED, max_lives
+    global max_lives
     global damage_level, bullet_speed_level, live_level
     global damage_level_need_coin, bullet_speed_level_need_coin, live_level_need_coin
     global sentry_gun_level, tactical_support_level
@@ -436,15 +444,21 @@ def buy_upgrade_levels(upgrade_key, add_levels):
 
     player.coin -= total_cost
     if upgrade_key == "damage":
-        player.damage += add_levels
+        player.damage += upgrade_scaling.purchase_bonus(
+            damage_level, add_levels, CORE_DAMAGE_SPEED_CAP
+        )
         damage_level += add_levels
         damage_level_need_coin = damage_level * row["cost_base"]
     elif upgrade_key == "bullet_speed":
-        BULLET_SPEED += add_levels
+        config.BULLET_SPEED += upgrade_scaling.purchase_bonus(
+            bullet_speed_level, add_levels, CORE_DAMAGE_SPEED_CAP
+        )
         bullet_speed_level += add_levels
         bullet_speed_level_need_coin = bullet_speed_level * row["cost_base"]
     elif upgrade_key == "lives":
-        max_lives += add_levels
+        max_lives += upgrade_scaling.purchase_bonus(
+            live_level, add_levels, HULL_CAPACITY_CAP
+        )
         live_level += add_levels
         live_level_need_coin = live_level * row["cost_base"]
     elif upgrade_key == "sentry":

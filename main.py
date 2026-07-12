@@ -50,8 +50,8 @@ items = {
 }
 enemies_p = {f"enemies_{i}": pygame.sprite.Group() for i in range(1, 19)}
 BOSS_GROUP_KEYS = ('enemies_5', 'enemies_11', 'enemies_18')
-CORE_DAMAGE_SPEED_CAP = 30
-HULL_CAPACITY_CAP = 5
+CORE_DAMAGE_SPEED_CAP = 5
+HULL_CAPACITY_CAP = 3
 
 level_start_time = 0
 

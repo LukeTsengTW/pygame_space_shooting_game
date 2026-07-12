@@ -30,6 +30,23 @@ def load_player_method(name: str, namespace: dict) -> tuple:
     return namespace[name], namespace
 
 
+def test_core_upgrade_increment_caps_match_upgrade_page_limits() -> None:
+    tree = ast.parse(MAIN_PATH.read_text(encoding="utf-8"), filename=str(MAIN_PATH))
+    constants = {
+        node.targets[0].id: ast.literal_eval(node.value)
+        for node in tree.body
+        if (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and node.targets[0].id in {"CORE_DAMAGE_SPEED_CAP", "HULL_CAPACITY_CAP"}
+        )
+    }
+
+    assert constants["CORE_DAMAGE_SPEED_CAP"] == 5
+    assert constants["HULL_CAPACITY_CAP"] == 3
+
+
 @pytest.mark.parametrize(
     ("current_level", "cap", "expected"),
     [
@@ -102,8 +119,8 @@ def test_apply_save_state_rebuilds_core_stats_with_progressive_bonuses() -> None
         "pygame": SimpleNamespace(mixer=SimpleNamespace(music=SimpleNamespace(set_volume=lambda _: None))),
         "config": SimpleNamespace(BULLET_SPEED=20),
         "upgrade_scaling": __import__("upgrade_scaling"),
-        "CORE_DAMAGE_SPEED_CAP": 30,
-        "HULL_CAPACITY_CAP": 5,
+        "CORE_DAMAGE_SPEED_CAP": 5,
+        "HULL_CAPACITY_CAP": 3,
     }
     apply_save_state, namespace = load_main_function("apply_save_state", namespace)
 
@@ -122,10 +139,10 @@ def test_apply_save_state_rebuilds_core_stats_with_progressive_bonuses() -> None
         }
     )
 
-    assert namespace["max_lives"] == 30
-    assert namespace["config"].BULLET_SPEED == 485
-    assert player.damage == 545
-    assert player.lives == 30
+    assert namespace["max_lives"] == 25
+    assert namespace["config"].BULLET_SPEED == 160
+    assert player.damage == 195
+    assert player.lives == 25
 
 
 def test_core_upgrade_rows_show_the_level_scaled_next_gain() -> None:
@@ -149,26 +166,26 @@ def test_core_upgrade_rows_show_the_level_scaled_next_gain() -> None:
         "config": SimpleNamespace(BULLET_SPEED=485),
         "support_upgrades": support_upgrades,
         "upgrade_scaling": __import__("upgrade_scaling"),
-        "CORE_DAMAGE_SPEED_CAP": 30,
-        "HULL_CAPACITY_CAP": 5,
+        "CORE_DAMAGE_SPEED_CAP": 5,
+        "HULL_CAPACITY_CAP": 3,
     }
     get_upgrade_rows, _ = load_main_function("get_upgrade_rows", namespace)
     rows = {row["key"]: row for row in get_upgrade_rows()}
 
-    assert "+30 DAMAGE" in rows["damage"]["subtitle"]
-    assert "+30 SPEED" in rows["bullet_speed"]["subtitle"]
-    assert "+5 LIFE" in rows["lives"]["subtitle"]
+    assert "+5 DAMAGE" in rows["damage"]["subtitle"]
+    assert "+5 SPEED" in rows["bullet_speed"]["subtitle"]
+    assert "+3 LIFE" in rows["lives"]["subtitle"]
 
 
 @pytest.mark.parametrize(
     ("upgrade_key", "level_name", "stat_name", "current_level", "add_levels", "cap"),
     [
-        ("damage", "damage_level", "damage", 28, 1, 30),
-        ("damage", "damage_level", "damage", 28, 3, 30),
-        ("bullet_speed", "bullet_speed_level", "BULLET_SPEED", 28, 1, 30),
-        ("bullet_speed", "bullet_speed_level", "BULLET_SPEED", 28, 3, 30),
-        ("lives", "live_level", "max_lives", 3, 1, 5),
-        ("lives", "live_level", "max_lives", 3, 3, 5),
+        ("damage", "damage_level", "damage", 28, 1, 5),
+        ("damage", "damage_level", "damage", 28, 3, 5),
+        ("bullet_speed", "bullet_speed_level", "BULLET_SPEED", 28, 1, 5),
+        ("bullet_speed", "bullet_speed_level", "BULLET_SPEED", 28, 3, 5),
+        ("lives", "live_level", "max_lives", 3, 1, 3),
+        ("lives", "live_level", "max_lives", 3, 3, 3),
     ],
 )
 def test_batched_core_purchase_uses_progressive_bonus(
@@ -193,8 +210,8 @@ def test_batched_core_purchase_uses_progressive_bonus(
         "config": SimpleNamespace(BULLET_SPEED=20),
         "max_lives": 10,
         "upgrade_scaling": __import__("upgrade_scaling"),
-        "CORE_DAMAGE_SPEED_CAP": 30,
-        "HULL_CAPACITY_CAP": 5,
+        "CORE_DAMAGE_SPEED_CAP": 5,
+        "HULL_CAPACITY_CAP": 3,
         "upgrade_selection": SimpleNamespace(
             clamp_addition=lambda amount, _: amount,
             total_upgrade_cost=lambda *_: 1,

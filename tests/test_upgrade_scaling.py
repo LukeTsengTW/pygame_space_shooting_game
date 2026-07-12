@@ -4,10 +4,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from upgrade_scaling import cumulative_bonus, next_increment, purchase_bonus
+from upgrade_scaling import _non_negative_int, cumulative_bonus, next_increment, purchase_bonus
 
 
 MAIN_PATH = Path(__file__).parents[1] / "main.py"
+PLAYER_PATH = Path(__file__).parents[1] / "player.py"
 
 
 def load_main_function(name: str, namespace: dict) -> tuple:
@@ -15,6 +16,16 @@ def load_main_function(name: str, namespace: dict) -> tuple:
     tree = ast.parse(MAIN_PATH.read_text(encoding="utf-8"), filename=str(MAIN_PATH))
     function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name)
     compiled = compile(ast.fix_missing_locations(ast.Module(body=[function], type_ignores=[])), str(MAIN_PATH), "exec")
+    exec(compiled, namespace)
+    return namespace[name], namespace
+
+
+def load_player_method(name: str, namespace: dict) -> tuple:
+    """Compile one Player method without loading Pygame assets or audio."""
+    tree = ast.parse(PLAYER_PATH.read_text(encoding="utf-8"), filename=str(PLAYER_PATH))
+    player_class = next(node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "Player")
+    method = next(node for node in player_class.body if isinstance(node, ast.FunctionDef) and node.name == name)
+    compiled = compile(ast.fix_missing_locations(ast.Module(body=[method], type_ignores=[])), str(PLAYER_PATH), "exec")
     exec(compiled, namespace)
     return namespace[name], namespace
 
@@ -79,11 +90,17 @@ def test_upgrade_math_sanitizes_negative_values(
     assert purchase_bonus(current_level, add_levels, cap) == expected
 
 
+@pytest.mark.parametrize("value", [None, "corrupt", float("nan"), float("inf"), float("-inf")])
+def test_upgrade_math_sanitizes_corrupt_values(value: object) -> None:
+    assert _non_negative_int(value) == 0
+
+
 def test_apply_save_state_rebuilds_core_stats_with_progressive_bonuses() -> None:
     player = SimpleNamespace()
     namespace = {
         "player": player,
         "pygame": SimpleNamespace(mixer=SimpleNamespace(music=SimpleNamespace(set_volume=lambda _: None))),
+        "config": SimpleNamespace(BULLET_SPEED=20),
         "upgrade_scaling": __import__("upgrade_scaling"),
         "CORE_DAMAGE_SPEED_CAP": 30,
         "HULL_CAPACITY_CAP": 5,
@@ -106,7 +123,7 @@ def test_apply_save_state_rebuilds_core_stats_with_progressive_bonuses() -> None
     )
 
     assert namespace["max_lives"] == 30
-    assert namespace["BULLET_SPEED"] == 485
+    assert namespace["config"].BULLET_SPEED == 485
     assert player.damage == 545
     assert player.lives == 30
 
@@ -129,7 +146,7 @@ def test_core_upgrade_rows_show_the_level_scaled_next_gain() -> None:
         "sentry_gun_level": 0,
         "tactical_support_level": 0,
         "player": SimpleNamespace(damage=515),
-        "BULLET_SPEED": 485,
+        "config": SimpleNamespace(BULLET_SPEED=485),
         "support_upgrades": support_upgrades,
         "upgrade_scaling": __import__("upgrade_scaling"),
         "CORE_DAMAGE_SPEED_CAP": 30,
@@ -173,7 +190,7 @@ def test_batched_core_purchase_uses_progressive_bonus(
         "live_level_need_coin": 0,
         "sentry_gun_level": 0,
         "tactical_support_level": 0,
-        "BULLET_SPEED": 20,
+        "config": SimpleNamespace(BULLET_SPEED=20),
         "max_lives": 10,
         "upgrade_scaling": __import__("upgrade_scaling"),
         "CORE_DAMAGE_SPEED_CAP": 30,
@@ -190,10 +207,71 @@ def test_batched_core_purchase_uses_progressive_bonus(
         "autosave": lambda: None,
     }
     buy_upgrade_levels, namespace = load_main_function("buy_upgrade_levels", namespace)
-    starting_stat = getattr(player, "damage") if stat_name == "damage" else namespace[stat_name]
+    if stat_name == "damage":
+        starting_stat = player.damage
+    elif stat_name == "BULLET_SPEED":
+        starting_stat = namespace["config"].BULLET_SPEED
+    else:
+        starting_stat = namespace[stat_name]
 
     assert buy_upgrade_levels(upgrade_key, add_levels) is True
-    ending_stat = getattr(player, "damage") if stat_name == "damage" else namespace[stat_name]
+    if stat_name == "damage":
+        ending_stat = player.damage
+    elif stat_name == "BULLET_SPEED":
+        ending_stat = namespace["config"].BULLET_SPEED
+    else:
+        ending_stat = namespace[stat_name]
     assert ending_stat == starting_stat + purchase_bonus(current_level, add_levels, cap)
     assert namespace[level_name] == current_level + add_levels
     assert player.lives == 2
+
+
+def test_player_firing_path_reads_projectile_speed_from_config() -> None:
+    class Vector:
+        def __init__(self, x: int, y: int) -> None:
+            self.x = x
+            self.y = y
+
+        def rotate(self, _angle: int) -> "Vector":
+            return self
+
+    class SpriteGroup:
+        def __init__(self) -> None:
+            self.sprites = []
+
+        def add(self, sprite: object) -> None:
+            self.sprites.append(sprite)
+
+    bullets = SpriteGroup()
+    all_sprites = SpriteGroup()
+    namespace = {
+        "BULLET_SPEED": 20,
+        "config": SimpleNamespace(BULLET_SPEED=485),
+        "pygame": SimpleNamespace(
+            K_UP="up",
+            K_DOWN="down",
+            K_LEFT="left",
+            K_RIGHT="right",
+            time=SimpleNamespace(get_ticks=lambda: 100),
+            math=SimpleNamespace(Vector2=Vector),
+        ),
+        "player_bullet_angle": (0,),
+        "PLAYER_SPEED": 4,
+        "SCREEN_WIDTH": 600,
+        "SCREEN_HEIGHT": 900,
+        "GAMEPLAY_TOP": 80,
+        "bullets": bullets,
+        "all_sprites": all_sprites,
+        "Bullet": lambda _player: SimpleNamespace(velocity=None),
+    }
+    update, _ = load_player_method("update", namespace)
+    player = SimpleNamespace(
+        out_of_game=False,
+        control=0,
+        rect=SimpleNamespace(left=1, right=10, top=100, bottom=200),
+        last_shot_time=0,
+    )
+
+    update(player, {"up": False, "down": False, "left": False, "right": False}, (0, 0))
+
+    assert bullets.sprites[0].velocity.y == -485

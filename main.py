@@ -154,7 +154,7 @@ def apply_save_state(data):
     global highest_unlocked_level, hard_level, is_complete_game
     global damage_level, bullet_speed_level, live_level, sentry_gun_level, tactical_support_level
     global damage_level_need_coin, bullet_speed_level_need_coin, live_level_need_coin
-    global max_lives, BULLET_SPEED, volume_level, opening_seen
+    global max_lives, volume_level, opening_seen
 
     progression = data["progression"]
     economy = data["economy"]
@@ -175,7 +175,9 @@ def apply_save_state(data):
     live_level_need_coin = live_level * 5432
 
     max_lives = 10 + upgrade_scaling.cumulative_bonus(live_level, HULL_CAPACITY_CAP)
-    BULLET_SPEED = 20 + upgrade_scaling.cumulative_bonus(bullet_speed_level, CORE_DAMAGE_SPEED_CAP)
+    config.BULLET_SPEED = 20 + upgrade_scaling.cumulative_bonus(
+        bullet_speed_level, CORE_DAMAGE_SPEED_CAP
+    )
 
     player.coin = economy["coin"]
     player.damage = 50 + upgrade_scaling.cumulative_bonus(damage_level, CORE_DAMAGE_SPEED_CAP)
@@ -362,7 +364,7 @@ def get_upgrade_rows():
             "cost": bullet_speed_level_need_coin,
             "cost_base": 321,
             "level_offset": 0,
-            "subtitle": f"COST {bullet_speed_level_need_coin:,} COINS\nCURRENT SPD {BULLET_SPEED}  /  +{speed_next} SPEED",
+            "subtitle": f"COST {bullet_speed_level_need_coin:,} COINS\nCURRENT SPD {config.BULLET_SPEED}  /  +{speed_next} SPEED",
         },
         {
             "key": "lives",
@@ -417,7 +419,7 @@ def draw_vertical_scrollbar(surface, track_rect, scroll_offset, max_scroll):
 
 
 def buy_upgrade_levels(upgrade_key, add_levels):
-    global BULLET_SPEED, max_lives
+    global max_lives
     global damage_level, bullet_speed_level, live_level
     global damage_level_need_coin, bullet_speed_level_need_coin, live_level_need_coin
     global sentry_gun_level, tactical_support_level
@@ -448,7 +450,7 @@ def buy_upgrade_levels(upgrade_key, add_levels):
         damage_level += add_levels
         damage_level_need_coin = damage_level * row["cost_base"]
     elif upgrade_key == "bullet_speed":
-        BULLET_SPEED += upgrade_scaling.purchase_bonus(
+        config.BULLET_SPEED += upgrade_scaling.purchase_bonus(
             bullet_speed_level, add_levels, CORE_DAMAGE_SPEED_CAP
         )
         bullet_speed_level += add_levels

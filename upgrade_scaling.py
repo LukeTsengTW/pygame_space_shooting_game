@@ -1,9 +1,12 @@
 """Pure calculations for progressively scaled player upgrades."""
 
 
-def _non_negative_int(value: int) -> int:
+def _non_negative_int(value: object) -> int:
     """Convert an upgrade value to a non-negative integer."""
-    return max(0, int(value))
+    try:
+        return max(0, int(value))
+    except (TypeError, ValueError, OverflowError):
+        return 0
 
 
 def next_increment(current_level: int, cap: int) -> int:

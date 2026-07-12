@@ -1,8 +1,9 @@
 from config import *
+import config
 from shared import bullets, all_sprites
 
 class Player(pygame.sprite.Sprite):
-    global player_bullet_angle, max_lives, PLAYER_SPEED, BULLET_SPEED
+    global player_bullet_angle, max_lives, PLAYER_SPEED
     def __init__(self):
         super().__init__()
         self.images = {
@@ -74,7 +75,7 @@ class Player(pygame.sprite.Sprite):
         if pygame.time.get_ticks() - self.last_shot_time > 10: 
             for angle in player_bullet_angle:
                 bullet = Bullet(self)
-                bullet.velocity = pygame.math.Vector2(0, -BULLET_SPEED).rotate(angle) 
+                bullet.velocity = pygame.math.Vector2(0, -config.BULLET_SPEED).rotate(angle)
                 bullets.add(bullet)
                 all_sprites.add(bullet)
 
@@ -109,7 +110,7 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, player):
         super().__init__()
         self.images = [pygame.transform.scale(pygame.image.load(f'img/player/bullets/zapper_assets/zapper_frame_{i}.png'), (6, 32)).convert_alpha() for i in range(1, 9)]
-        self.velocity = pygame.math.Vector2(0, BULLET_SPEED) 
+        self.velocity = pygame.math.Vector2(0, config.BULLET_SPEED)
         self.index = 0 
         self.surf = self.images[self.index] 
         self.rect = self.surf.get_rect(center = (player.rect.centerx, player.rect.top))

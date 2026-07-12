@@ -114,6 +114,7 @@ class Bullet(pygame.sprite.Sprite):
         self.index = 0 
         self.surf = self.images[self.index] 
         self.rect = self.surf.get_rect(center = (player.rect.centerx, player.rect.top))
+        self.previous_rect = self.rect.copy()
         self.pos_x = float(self.rect.x)
         self.pos_y = float(self.rect.y)
 
@@ -124,6 +125,7 @@ class Bullet(pygame.sprite.Sprite):
         self.index = (self.index + 1) % len(self.images) 
         self.surf = self.images[self.index] 
 
+        self.previous_rect = self.rect.copy()
         self.pos_y += self.velocity.y
         self.pos_x += self.velocity.x 
         self.rect.y = int(self.pos_y)

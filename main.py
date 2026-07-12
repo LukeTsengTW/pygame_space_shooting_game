@@ -70,7 +70,7 @@ tactical_support_banner_until = 0
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_icon(pygame.image.load('icon.png'))
-pygame.display.set_caption('Space Shooter - Pygame Edition v1.1.0 - By: @LukeTseng')
+pygame.display.set_caption('Space Shooter - Pygame Edition v1.1.1 - By: @LukeTseng')
 font = pygame.font.Font('font.ttf', 36)
 clock = pygame.time.Clock()
 
